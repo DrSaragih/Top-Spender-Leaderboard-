@@ -49,3 +49,11 @@ python3 -m unittest discover -s tests -v
 ```
 
 Menguji autentikasi, perlindungan request lintas situs, file privat, validasi, akumulasi, pengurutan, penyimpanan, dan permintaan duplikat bersamaan. Gunakan database terpisah untuk pengujian; jangan mengisi database acara dengan data demo.
+
+## Timer pengumpulan struk
+
+Di `/admin`, bagian **Timer pengumpulan struk**, centang **Aktifkan batas waktu**, pilih tanggal/jam berakhir dan zona WIB/WITA/WIT, lalu simpan. Timer awalnya tidak aktif; tidak ada jam penutupan yang diasumsikan. Batas waktu disimpan di SQLite dan tetap berlaku setelah restart.
+
+Leaderboard mengambil batas dan waktu server setiap 3 detik, lalu menghitung mundur hari/jam/menit/detik secara lokal menggunakan waktu monotonik. Perbedaan pengaturan jam perangkat tidak mengubah batas server. Label batas di layar publik selalu dikonversi ke WIB. Lima menit terakhir diberi penanda mendesak. Saat nol, pengumpulan ditutup dan API menolak transaksi baru, termasuk dari tab admin lama. Pengiriman ulang ID yang sudah tersimpan tetap berhasil tanpa menambah transaksi kedua kali.
+
+Admin dapat memperpanjang batas untuk membuka kembali atau menonaktifkan timer agar pengumpulan kembali terbuka tanpa batas waktu. Jika koneksi terputus, timer memakai batas terakhir dan menampilkan peringatan; perubahan admin baru diterima setelah koneksi pulih. Pastikan jam server benar. Memulai browser baru tanpa koneksi tidak dapat menampilkan batas yang belum pernah dimuat.

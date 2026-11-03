@@ -28,7 +28,7 @@ async function history() {
 }
 $('login-form').addEventListener('submit',async event=>{
   event.preventDefault();$('login-submit').disabled=true;
-  try{await request('/api/login',{password:$('password').value});$('password').value='';message('login-message','');showWorkspace(true);await history();}
+  try{await request('/api/login',{password:$('password').value});$('password').value='';message('login-message','');showWorkspace(true);await history();await loadCollection();}
   catch(error){message('login-message',error.message,true);}finally{$('login-submit').disabled=false;}
 });
 $('amount').addEventListener('input',()=>{$('amount-preview').textContent=rupiah(Number($('amount').value)||0);});
@@ -47,7 +47,7 @@ $('purchase-form').addEventListener('submit',async event=>{
     await request('/api/transactions',{...data,id:pending.id});pending=null;sessionStorage.removeItem('toy-pending');
     message('save-message',`${rupiah(data.amount)} untuk ${data.firstName} (${data.memberCode}) tersimpan. Leaderboard akan diperbarui otomatis.`);
     $('purchase-form').reset();$('amount-preview').textContent=rupiah(0);await history();$('first-name').focus();
-  }catch(error){if(error.status===400||error.status===409){pending=null;sessionStorage.removeItem('toy-pending');}message('save-message',`${error.message} Data tetap di formulir; Anda dapat mencoba menyimpan kembali.`,true);}
+  }catch(error){if(error.status===400||error.status===409||error.status===423){pending=null;sessionStorage.removeItem('toy-pending');}message('save-message',`${error.message} Data tetap di formulir; Anda dapat mencoba menyimpan kembali.`,true);}
   finally{saving=false;$('save-purchase').disabled=false;}
 });
 $('logout').addEventListener('click',async()=>{if(saving)return;try{await request('/api/logout',{});showWorkspace(false);}catch(error){message('save-message',error.message,true);}});
@@ -56,6 +56,37 @@ $('refresh-history').addEventListener('click',history);
   try{
     const saved=sessionStorage.getItem('toy-pending');
     if(saved){pending=JSON.parse(saved);const data=JSON.parse(pending.signature);$('first-name').value=data.firstName;$('member-code').value=data.memberCode;$('amount').value=data.amount;$('amount-preview').textContent=rupiah(data.amount);message('save-message','Transaksi sebelumnya belum terkonfirmasi. Simpan kembali untuk memeriksa hasil tanpa duplikasi.');}
-    const state=await request('/api/session');showWorkspace(state.authenticated);if(state.authenticated)await history();
+    const state=await request('/api/session');showWorkspace(state.authenticated);if(state.authenticated){await history();await loadCollection();}
   }catch(error){message('login-message','Tidak dapat terhubung ke server. Muat ulang setelah koneksi pulih.',true);}
 })();
+
+function updateCollectionStatus(state){
+  $('collection-state').textContent=state.deadline===null?'Pengumpulan terbuka tanpa batas waktu.':state.closed?'Pengumpulan ditutup. Perpanjang waktu untuk menerima struk lagi.':'Pengumpulan terbuka sampai batas waktu yang ditentukan.';
+}
+async function loadCollection(){
+  $('save-timer').disabled=true;
+  try{
+    const state=await request('/api/collection');
+    $('timer-enabled').checked=state.deadline!==null;
+    if(state.deadline){
+      const offset=Number($('collection-zone').value.slice(1,3))*3600000;
+      $('collection-deadline').value=new Date(Date.parse(state.deadline)+offset).toISOString().slice(0,16);
+    }
+    $('collection-deadline').required=$('timer-enabled').checked;
+    updateCollectionStatus(state);$('save-timer').disabled=false;
+  }catch(error){message('timer-message','Pengaturan belum dapat dimuat. Masuk kembali atau muat ulang halaman.',true);}
+}
+$('timer-enabled').addEventListener('change',()=>{$('collection-deadline').required=$('timer-enabled').checked;});
+$('timer-form').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const enabled=$('timer-enabled').checked;
+  const raw=$('collection-deadline').value;
+  if(enabled&&!raw){message('timer-message','Pilih tanggal dan jam berakhir.',true);return;}
+  const deadline=enabled?raw+':00'+$('collection-zone').value:null;
+  $('save-timer').disabled=true;
+  try{
+    const state=await request('/api/collection',{deadline});updateCollectionStatus(state);
+    message('timer-message',state.closed?'Batas waktu tersimpan. Pengumpulan ditutup.':'Pengaturan tersimpan. Leaderboard akan memperbarui timer otomatis.');
+  }catch(error){message('timer-message',error.message,true);}
+  finally{$('save-timer').disabled=false;}
+});

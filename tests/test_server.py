@@ -34,6 +34,7 @@ class ServerTest(unittest.TestCase):
 
     def setUp(self):
         with app.connect() as db:
+            db.execute('DELETE FROM settings')
             db.execute('DELETE FROM purchases')
             db.execute('DELETE FROM customers')
         self.client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
@@ -84,6 +85,32 @@ class ServerTest(unittest.TestCase):
         self.call('/api/transactions',self.purchase())
         self.assertEqual(self.call('/api/transactions',self.purchase('Clara'))[0],409)
         self.assertEqual(self.call('/api/leaderboard')[1]['customers'][0]['total'],250000)
+
+    def test_countdown_deadline_enforces_closure_and_reopens(self):
+        transaction = self.purchase()
+        self.call('/api/transactions', transaction)
+        status, state = self.call('/api/collection', {'deadline': '2001-12-12T23:59:00+07:00'})
+        self.assertEqual(status, 200)
+        self.assertTrue(state['closed'])
+        self.assertEqual(state['deadline'], '2001-12-12T16:59:00+00:00')
+        self.assertEqual(self.call('/api/transactions', self.purchase(amount=500000))[0], 423)
+        self.assertTrue(self.call('/api/transactions', transaction)[1]['duplicate'])
+        app.initialize()
+        self.assertTrue(self.call('/api/leaderboard')[1]['collection']['closed'])
+        self.assertEqual(self.call('/api/leaderboard')[1]['customers'][0]['total'], 250000)
+        self.call('/api/collection', {'deadline': '2099-12-12T23:59:00+09:00'})
+        self.assertFalse(self.call('/api/collection')[1]['closed'])
+        self.assertEqual(self.call('/api/transactions', self.purchase(amount=500000))[0], 201)
+        self.call('/api/collection', {'deadline': None})
+        self.assertIsNone(self.call('/api/collection')[1]['deadline'])
+
+    def test_countdown_auth_and_validation(self):
+        anonymous = urllib.request.build_opener()
+        self.assertEqual(self.call('/api/collection', {'deadline': None}, client=anonymous)[0], 401)
+        for data in [{}, {'deadline': 123}, {'deadline': 'invalid'},
+                     {'deadline': '2026-12-12T23:59:00'}, {'deadline': '2026-02-30T12:00:00+07:00'}]:
+            self.assertEqual(self.call('/api/collection', data)[0], 400)
+        self.assertIsNone(self.call('/api/collection')[1]['deadline'])
 
     def test_concurrent_duplicate_is_saved_once(self):
         transaction=self.purchase()

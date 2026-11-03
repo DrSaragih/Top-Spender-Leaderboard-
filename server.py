@@ -1,4 +1,5 @@
 """Toy Factory single-instance server. Python 3.12+, no third-party dependencies."""
+from datetime import datetime, timezone
 import getpass
 import hashlib
 import hmac
@@ -35,12 +36,21 @@ def initialize():
     with connect() as db:
         db.execute('PRAGMA journal_mode=WAL')
         db.executescript('''
+          CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS customers(code TEXT PRIMARY KEY, name TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS purchases(
             id TEXT PRIMARY KEY, code TEXT NOT NULL REFERENCES customers(code),
             amount INTEGER NOT NULL CHECK(amount>0), created_at TEXT NOT NULL
             DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
         ''')
+
+
+def collection_state(db):
+    row = db.execute("SELECT value FROM settings WHERE key='collection_deadline'").fetchone()
+    deadline = row['value'] if row else None
+    now = datetime.now(timezone.utc)
+    return {'deadline': deadline, 'serverNow': now.isoformat(),
+            'closed': bool(deadline and datetime.fromisoformat(deadline) <= now)}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -86,7 +96,12 @@ class Handler(BaseHTTPRequestHandler):
                 rows = db.execute('''SELECT name AS firstName, c.code AS memberCode,
                   SUM(amount) AS total FROM customers c JOIN purchases p ON c.code=p.code
                   GROUP BY c.code ORDER BY total DESC, c.code ASC LIMIT 10''').fetchall()
-            return self.reply(200, {'customers': [dict(r) for r in rows]})
+                collection = collection_state(db)
+            return self.reply(200, {'customers': [dict(r) for r in rows], 'collection': collection})
+        if route == '/api/collection':
+            with connect() as db:
+                state = collection_state(db)
+            return self.reply(200, state)
         if route == '/api/session':
             return self.reply(200, {'authenticated': self.authorized()})
         if route == '/api/transactions':
@@ -163,6 +178,29 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 SESSIONS.pop(self.token(), None)
             return self.reply(200, {'ok': True}, self.session_cookie('', 0))
+        if route == '/api/collection':
+            deadline = data.get('deadline')
+            if 'deadline' not in data:
+                return self.reply(400, {'error': 'Batas waktu wajib dikirim; null untuk menonaktifkan timer.'})
+            if deadline is not None:
+                try:
+                    if not isinstance(deadline, str) or len(deadline) > 40:
+                        raise ValueError()
+                    parsed = datetime.fromisoformat(deadline)
+                    if parsed.tzinfo is None or not 2000 <= parsed.year <= 2100:
+                        raise ValueError()
+                    deadline = parsed.astimezone(timezone.utc).isoformat()
+                except (ValueError, OverflowError):
+                    return self.reply(400, {'error': 'Tanggal batas waktu tidak valid atau zona waktu belum ditentukan.'})
+            with connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                if deadline is None:
+                    db.execute("DELETE FROM settings WHERE key='collection_deadline'")
+                else:
+                    db.execute("INSERT INTO settings(key,value) VALUES('collection_deadline',?) "
+                               "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (deadline,))
+                state = collection_state(db)
+            return self.reply(200, state)
         if route != '/api/transactions':
             return self.reply(404, {'error': 'Endpoint tidak ditemukan.'})
         name, code, amount, key = (data.get(k) for k in ('firstName', 'memberCode', 'amount', 'id'))
@@ -183,6 +221,8 @@ class Handler(BaseHTTPRequestHandler):
                 if previous['code'] != code or previous['amount'] != amount or not customer or customer['name'] != name:
                     return self.reply(409, {'error': 'ID transaksi sudah dipakai untuk data berbeda.'})
                 return self.reply(200, {'ok': True, 'duplicate': True})
+            if collection_state(db)['closed']:
+                return self.reply(423, {'error': 'Pengumpulan struk sudah ditutup. Admin perlu memperpanjang batas waktu sebelum menambah transaksi.'})
             if customer and customer['name'] != name:
                 return self.reply(409, {'error': f'Member code ini sudah terdaftar atas nama {customer["name"]}. Gunakan nama yang sama.'})
             total = db.execute('SELECT COALESCE(SUM(amount),0) FROM purchases WHERE code=?', (code,)).fetchone()[0]
