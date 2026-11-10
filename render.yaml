@@ -1,0 +1,26 @@
+# Review the paid service + persistent disk charges before creating this Blueprint.
+services:
+  - type: web
+    name: toy-factory-leaderboard
+    runtime: python
+    plan: starter
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /healthz
+    numInstances: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.12
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: DATABASE_PATH
+        value: /var/data/leaderboard.sqlite3
+    disk:
+      name: toy-factory-data
+      mountPath: /var/data
+      sizeGB: 1

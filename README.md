@@ -4,10 +4,11 @@ Leaderboard untuk 12 Desember 2026 dengan halaman admin, penyimpanan SQLite, dan
 
 ## Menjalankan
 
-Membutuhkan Python 3.12+; tidak ada dependency tambahan.
+Membutuhkan Python 3.12+. Instal dependency QR lokal dengan `python -m pip install -r requirements.txt` (Windows) atau `python3 -m pip install -r requirements.txt`.
 
 ```sh
 cd /workspace/Top-Spender-Leaderboard-
+python3 -m pip install -r requirements.txt
 python3 server.py
 ```
 
@@ -45,6 +46,7 @@ Aplikasi belum di-deploy ke hosting publik. Tidak ada integrasi POS otomatis, im
 ## Pengujian
 
 ```sh
+python3 -m pip install -r requirements.txt
 python3 -m unittest discover -s tests -v
 ```
 
@@ -57,3 +59,13 @@ Di `/admin`, bagian **Timer pengumpulan struk**, centang **Aktifkan batas waktu*
 Leaderboard mengambil batas dan waktu server setiap 3 detik, lalu menghitung mundur hari/jam/menit/detik secara lokal menggunakan waktu monotonik. Perbedaan pengaturan jam perangkat tidak mengubah batas server. Label batas di layar publik selalu dikonversi ke WIB. Lima menit terakhir diberi penanda mendesak. Saat nol, pengumpulan ditutup dan API menolak transaksi baru, termasuk dari tab admin lama. Pengiriman ulang ID yang sudah tersimpan tetap berhasil tanpa menambah transaksi kedua kali.
 
 Admin dapat memperpanjang batas untuk membuka kembali atau menonaktifkan timer agar pengumpulan kembali terbuka tanpa batas waktu. Jika koneksi terputus, timer memakai batas terakhir dan menampilkan peringatan; perubahan admin baru diterima setelah koneksi pulih. Pastikan jam server benar. Memulai browser baru tanpa koneksi tidak dapat menampilkan batas yang belum pernah dimuat.
+
+## Download data dan QR publik
+
+Admin memiliki tombol **Unduh semua transaksi** dan **Unduh rekap per member**. Ekspor CSV mencakup semua data yang sudah tersimpan saat query dijalankan, bukan hanya 100 transaksi terakhir atau 10 besar. CSV berformat UTF-8 BOM agar nama Indonesia terbaca di Excel; angka berupa rupiah bulat tanpa pemisah ribuan. Jika Excel tidak memisahkan kolom secara otomatis, gunakan Data → From Text/CSV dan pilih delimiter koma. Waktu tersedia dalam UTC dan WIB. Nilai teks yang dapat dianggap rumus oleh spreadsheet diberi apostrof; kode numerik dengan nol di depan juga diberi apostrof untuk mempertahankan nol tersebut.
+
+CSV adalah arsip/tabulasi, bukan backup database yang bisa langsung di-restore aplikasi. Riwayat belum memiliki fitur import. File yang selesai diunduh tidak ikut berubah saat ada transaksi baru; ekspor lagi untuk snapshot terbaru. Semua ekspor dan QR admin memerlukan login.
+
+QR dibuat lokal pada server dengan `qrcode==8.2`; tidak mengirim URL ke layanan QR pihak ketiga. Server memakai `PUBLIC_URL` jika diatur, atau `RENDER_EXTERNAL_URL` yang disediakan Render. Hanya origin HTTPS tanpa path/query yang diterima. Tanpa alamat publik yang valid, admin menampilkan petunjuk hosting dan tidak membuat QR localhost. QR mengarah ke `/`, tidak mengandung kredensial admin. Saat ganti domain, unduh dan cetak ulang QR. Tautan videotron memakai `/?display=screen`.
+
+Konfigurasi Render dan langkah aktivasi ada di [DEPLOY_RENDER.md](DEPLOY_RENDER.md). QR tidak menyediakan internet: laptop admin, HP pelanggan, dan videotron boleh memakai jaringan berbeda tetapi tetap membutuhkan koneksi internet ke URL hosting yang sama.

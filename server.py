@@ -1,5 +1,7 @@
-"""Toy Factory single-instance server. Python 3.12+, no third-party dependencies."""
-from datetime import datetime, timezone
+"""Toy Factory single-instance server. Python 3.12+; QR generation uses the pinned qrcode package."""
+from datetime import datetime, timezone, timedelta
+import csv
+import io
 import getpass
 import hashlib
 import hmac
@@ -53,6 +55,32 @@ def collection_state(db):
             'closed': bool(deadline and datetime.fromisoformat(deadline) <= now)}
 
 
+def public_url():
+    raw = os.environ.get('PUBLIC_URL') or os.environ.get('RENDER_EXTERNAL_URL', '')
+    try:
+        if len(raw) > 512:
+            return None
+        parsed = urlsplit(raw)
+        hostname = parsed.hostname
+        parsed.port  # Validate a configured port, if any.
+    except ValueError:
+        return None
+    if (parsed.scheme != 'https' or not hostname or parsed.username or parsed.password
+            or parsed.query or parsed.fragment or parsed.path not in ('', '/')
+            or parsed.hostname in ('localhost', '127.0.0.1')):
+        return None
+    return raw.rstrip('/') + '/'
+
+
+def csv_cell(value):
+    # Spreadsheet programs must not execute customer identifiers as formulas.
+    if isinstance(value, str) and (value.lstrip().startswith(('=', '+', '-', '@'))
+                                 or value.startswith(('\t', '\r', '\n'))
+                                 or (value.isdigit() and value.startswith('0'))):
+        return "'" + value
+    return value
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass  # Never log passwords, bodies or cookies.
@@ -65,6 +93,37 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('X-Content-Type-Options', 'nosniff')
         if cookie:
             self.send_header('Set-Cookie', cookie)
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def download_csv(self, kind):
+        if not self.authorized():
+            return self.reply(401, {'error': 'Silakan masuk kembali.'})
+        output = io.StringIO(newline='')
+        writer = csv.writer(output)
+        with connect() as db:
+            if kind == 'transactions':
+                writer.writerow(['ID Transaksi', 'Waktu UTC', 'Waktu WIB', 'Nama Depan', 'Member Code', 'Nominal IDR'])
+                rows = db.execute("SELECT p.id,p.created_at,c.name,c.code,p.amount FROM purchases p "
+                                  "JOIN customers c ON p.code=c.code ORDER BY p.rowid ASC")
+                for row in rows:
+                    wib = datetime.fromisoformat(row['created_at'].replace('Z', '+00:00')).astimezone(
+                        timezone(timedelta(hours=7))).isoformat()
+                    writer.writerow([csv_cell(v) for v in (row['id'], row['created_at'], wib, row['name'], row['code'], row['amount'])])
+            else:
+                writer.writerow(['Peringkat', 'Nama Depan', 'Member Code', 'Jumlah Transaksi', 'Total IDR'])
+                rows = db.execute("SELECT c.name,c.code,COUNT(*) AS count,SUM(p.amount) AS total FROM purchases p "
+                                  "JOIN customers c ON p.code=c.code GROUP BY c.code ORDER BY total DESC,c.code ASC")
+                for rank, row in enumerate(rows, 1):
+                    writer.writerow([csv_cell(v) for v in (rank, row['name'], row['code'], row['count'], row['total'])])
+        body = output.getvalue().encode('utf-8-sig')
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/csv; charset=utf-8')
+        stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
+        self.send_header('Content-Disposition', f'attachment; filename="toy-factory-{kind}-{stamp}.csv"')
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -91,6 +150,33 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         route = urlsplit(self.path).path
+        if route == '/healthz':
+            with connect() as db:
+                db.execute('SELECT 1 FROM settings LIMIT 1').fetchall()
+            return self.reply(200, {'ok': True})
+        if route in ('/api/export/transactions.csv', '/api/export/members.csv'):
+            return self.download_csv('transactions' if route.endswith('transactions.csv') else 'members')
+        if route in ('/api/share', '/api/share/qr.svg'):
+            if not self.authorized():
+                return self.reply(401, {'error': 'Silakan masuk kembali.'})
+            url = public_url()
+            if route == '/api/share':
+                return self.reply(200, {'publicUrl': url, 'screenUrl': url + '?display=screen' if url else None})
+            if not url:
+                return self.reply(409, {'error': 'Alamat HTTPS publik belum dikonfigurasi di hosting.'})
+            import qrcode
+            import qrcode.image.svg
+            qr = qrcode.make(url, image_factory=qrcode.image.svg.SvgPathImage, box_size=10, border=4)
+            body = qr.to_string()
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/svg+xml')
+            self.send_header('Content-Disposition', 'inline; filename="toy-factory-qr.svg"')
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if route == '/api/leaderboard':
             with connect() as db:
                 rows = db.execute('''SELECT name AS firstName, c.code AS memberCode,
@@ -235,6 +321,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     password = os.environ.get('ADMIN_PASSWORD')
+    if not password and not __import__('sys').stdin.isatty():
+        raise SystemExit('Tetapkan ADMIN_PASSWORD di environment hosting (minimal 12 karakter).')
     if not password:
         password = getpass.getpass('Buat kata sandi admin (minimal 12 karakter): ')
     if len(password) < 12 or len(password) > 1024:

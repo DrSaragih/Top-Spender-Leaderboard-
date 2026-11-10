@@ -1,3 +1,7 @@
+import csv
+import io
+import os
+from unittest.mock import patch
 import concurrent.futures
 import http.cookiejar
 import importlib.util
@@ -111,6 +115,69 @@ class ServerTest(unittest.TestCase):
                      {'deadline': '2026-12-12T23:59:00'}, {'deadline': '2026-02-30T12:00:00+07:00'}]:
             self.assertEqual(self.call('/api/collection', data)[0], 400)
         self.assertIsNone(self.call('/api/collection')[1]['deadline'])
+
+    def fetch_raw(self, path, client=None):
+        try:
+            response = (client or self.client).open(self.base + path)
+        except urllib.error.HTTPError as error:
+            response = error
+        return response.status, response.headers, response.read()
+
+    def test_exports_include_all_rows_and_all_members(self):
+        with app.connect() as db:
+            for index in range(12):
+                db.execute('INSERT INTO customers(code,name) VALUES(?,?)', (f'TF-{index:03}', 'Nadia'))
+            for index in range(125):
+                db.execute('INSERT INTO purchases(id,code,amount) VALUES(?,?,?)',
+                           (str(uuid.uuid4()), f'TF-{index%12:03}', index+1))
+        anonymous = urllib.request.build_opener()
+        for path in ['/api/export/transactions.csv', '/api/export/members.csv']:
+            self.assertEqual(self.fetch_raw(path, anonymous)[0], 401)
+        status, headers, body = self.fetch_raw('/api/export/transactions.csv')
+        self.assertEqual(status, 200)
+        self.assertTrue(body.startswith(b'\xef\xbb\xbf'))
+        self.assertIn('attachment;', headers['Content-Disposition'])
+        self.assertEqual(headers['Cache-Control'], 'no-store')
+        records = list(csv.DictReader(io.StringIO(body.decode('utf-8-sig'))))
+        self.assertEqual(len(records), 125)
+        self.assertEqual(sum(int(row['Nominal IDR']) for row in records), sum(range(1,126)))
+        self.assertTrue(all('+07:00' in row['Waktu WIB'] for row in records))
+        records = list(csv.DictReader(io.StringIO(self.fetch_raw('/api/export/members.csv')[2].decode('utf-8-sig'))))
+        self.assertEqual(len(records), 12)
+        self.assertEqual(sum(int(row['Jumlah Transaksi']) for row in records), 125)
+        self.assertEqual(sum(int(row['Total IDR']) for row in records), sum(range(1,126)))
+        self.assertEqual([int(row['Total IDR']) for row in records], sorted([int(row['Total IDR']) for row in records], reverse=True))
+
+    def test_csv_formula_protection_and_empty_export(self):
+        self.assertEqual(len(list(csv.reader(io.StringIO(self.fetch_raw('/api/export/transactions.csv')[2].decode('utf-8-sig'))))), 1)
+        self.call('/api/transactions', self.purchase('Élodie', '-123', 250000))
+        records = list(csv.DictReader(io.StringIO(self.fetch_raw('/api/export/transactions.csv')[2].decode('utf-8-sig'))))
+        self.assertEqual(records[0]['Nama Depan'], 'Élodie')
+        self.assertEqual(records[0]['Member Code'], "'-123")
+        for value in ['=1+1', '+1', '-1', '@SUM(A1)', '\tformula', '  =1']:
+            self.assertTrue(app.csv_cell(value).startswith("'"))
+        self.assertEqual(app.csv_cell('TF-001'), 'TF-001')
+        self.assertEqual(app.csv_cell('00123'), "'00123")
+        self.assertEqual(app.csv_cell(250000), 250000)
+
+    def test_public_share_qr_and_health(self):
+        anonymous = urllib.request.build_opener()
+        self.assertEqual(self.call('/healthz', client=anonymous), (200, {'ok': True}))
+        for path in ['/api/share', '/api/share/qr.svg']:
+            self.assertEqual(self.fetch_raw(path, anonymous)[0], 401)
+        with patch.dict(os.environ, {'PUBLIC_URL': '', 'RENDER_EXTERNAL_URL': ''}):
+            self.assertIsNone(self.call('/api/share')[1]['publicUrl'])
+            self.assertEqual(self.fetch_raw('/api/share/qr.svg')[0], 409)
+        with patch.dict(os.environ, {'PUBLIC_URL': '', 'RENDER_EXTERNAL_URL': 'https://toy-example.onrender.com'}):
+            self.assertEqual(self.call('/api/share')[1]['publicUrl'], 'https://toy-example.onrender.com/')
+            status, headers, svg = self.fetch_raw('/api/share/qr.svg')
+            self.assertEqual(status, 200)
+            self.assertEqual(headers['Content-Type'], 'image/svg+xml')
+            self.assertIn(b'<svg', svg)
+            self.assertIn(b'<path', svg)
+        for value in ['http://example.com', 'https://example.com/admin', 'https://user:pass@example.com', 'https://localhost', 'https://example.com?token=secret']:
+            with patch.dict(os.environ, {'PUBLIC_URL': value}):
+                self.assertIsNone(app.public_url())
 
     def test_concurrent_duplicate_is_saved_once(self):
         transaction=self.purchase()
