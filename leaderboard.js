@@ -10,8 +10,14 @@ async function refreshLeaderboard(){
     const response=await fetch('/api/leaderboard',{cache:'no-store',signal:AbortSignal.timeout(8000)});
     if(!response.ok)throw new Error('Server tidak tersedia');
     const data=await response.json();
+    const pageVersion=document.querySelector('meta[name="display-version"]')?.content;
+    if(/^[a-f0-9]{16}$/.test(pageVersion||'')&&/^[a-f0-9]{16}$/.test(data.displayVersion||'')&&pageVersion!==data.displayVersion){
+      const url=new URL(location.href);url.searchParams.set('v',data.displayVersion);if(document.body.classList.contains('screen-mode'))url.searchParams.set('display','screen');if(document.body.classList.contains('paused'))url.searchParams.set('motion','paused');location.replace(url.href);return;
+    }
+    if(!Array.isArray(data.customers)||data.customers.some(customer=>!customer||typeof customer.firstName!=='string'||typeof customer.memberCode!=='string'||!Number.isSafeInteger(customer.points)||customer.points<0)){
+      const error=new Error('Data poin belum sesuai. Muat ulang aplikasi dan pastikan server sudah diperbarui.');error.dataError=true;throw error;
+    }
     syncCollection(data.collection);
-    if(!Array.isArray(data.customers))throw new Error('Data tidak valid');
     const snapshot=JSON.stringify(data.customers);
     if(snapshot!==lastSnapshot){renderCustomers(data.customers);lastSnapshot=snapshot;}
     lastSuccess=new Date();
@@ -19,8 +25,8 @@ async function refreshLeaderboard(){
     document.getElementById('last-update').textContent='Sinkron '+lastSuccess.toLocaleTimeString('id-ID')+' · otomatis tiap 3 detik';
   }catch(error){
     collectionConnected=false;renderCountdown();
-    statusBadge.textContent='KONEKSI TERPUTUS';statusBadge.style.color='#a21934';statusBadge.style.background='#fff0f3';
-    document.getElementById('last-update').textContent=lastSuccess?'Data terakhir '+lastSuccess.toLocaleTimeString('id-ID')+' · mencoba kembali…':'Belum terhubung ke server · mencoba kembali…';
+    statusBadge.textContent=error.dataError?'DATA POIN BELUM SESUAI':'KONEKSI TERPUTUS';statusBadge.style.color='#a21934';statusBadge.style.background='#fff0f3';
+    document.getElementById('last-update').textContent=error.dataError?error.message:lastSuccess?'Data terakhir '+lastSuccess.toLocaleTimeString('id-ID')+' · mencoba kembali…':'Belum terhubung ke server · mencoba kembali…';
   }finally{loading=false;}
 }
 let collectionDeadline=null;

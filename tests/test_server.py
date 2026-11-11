@@ -266,6 +266,17 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(summary['Poin Non-jewel'],'22')
         self.assertEqual(summary['Total Poin'],'23')
 
+    def test_display_version_and_cache_prevent_old_currency_ui(self):
+        status, headers, html = self.fetch_raw('/')
+        self.assertEqual(status,200)
+        self.assertIn('no-store',headers['Cache-Control'])
+        self.assertNotIn(b'__DISPLAY_VERSION__',html)
+        self.assertIn(f'content="{app.DISPLAY_VERSION}"'.encode(),html)
+        self.assertIn(f'/leaderboard.js?v={app.DISPLAY_VERSION}'.encode(),html)
+        self.assertNotIn(b'customer.total',html)
+        self.assertNotIn(b'const rupiah',html)
+        self.assertEqual(self.call('/api/leaderboard')[1]['displayVersion'],app.DISPLAY_VERSION)
+
     def test_original_database_schema_is_migrated_idempotently(self):
         legacy=Path(self.temp.name)/('legacy-'+str(uuid.uuid4())+'.sqlite3')
         with patch.object(app,'DB',legacy):

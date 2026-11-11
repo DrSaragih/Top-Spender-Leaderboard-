@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('DATABASE_PATH', ROOT / '.data' / 'leaderboard.sqlite3'))
+DISPLAY_VERSION = hashlib.sha256((ROOT / 'index.html').read_bytes() + (ROOT / 'leaderboard.js').read_bytes()).hexdigest()[:16]
 CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
               'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
 MIN_RECEIPT = 500_000
@@ -230,7 +231,7 @@ class Handler(BaseHTTPRequestHandler):
                 collection = collection_state(db)
             customers = [{'firstName': row['firstName'], 'memberCode': row['memberCode'],
                           'points': row['points']} for row in rows]
-            return self.reply(200, {'customers': customers, 'collection': collection})
+            return self.reply(200, {'customers': customers, 'collection': collection, 'displayVersion': DISPLAY_VERSION})
         if route == '/api/collection':
             with connect() as db:
                 state = collection_state(db)
@@ -264,10 +265,12 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(404, {'error': 'Halaman tidak ditemukan.'})
         file = ROOT / files[route]
         body = file.read_bytes()
+        if files[route] == 'index.html':
+            body = body.replace(b'__DISPLAY_VERSION__', DISPLAY_VERSION.encode())
         mime = {'html': 'text/html', 'js': 'text/javascript', 'svg': 'image/svg+xml'}[file.suffix[1:]]
         self.send_response(200)
         self.send_header('Content-Type', mime + '; charset=utf-8')
-        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Cache-Control', 'no-store, max-age=0')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('X-Frame-Options', 'DENY')
         self.send_header('Referrer-Policy', 'same-origin')

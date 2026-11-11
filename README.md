@@ -98,3 +98,11 @@ Versi ini tetap menggunakan Python/SQLite. Migrasi Vercel/Firebase belum dilakuk
 Form admin mewajibkan pilihan **Jewel / Perhiasan** atau **Non-jewel**. Jewel langsung memakai kategori Perhiasan (Rp500.000 per poin) tanpa memilih subkategori. Non-jewel membutuhkan pilihan F&B, Fashion, atau Elektronik: Elektronik tetap Rp500.000 per poin; F&B/Fashion Rp50.000 per poin. Mengubah jenis belanja langsung memperbarui pratinjau. Riwayat menampilkan jenis dan kategori.
 
 CSV transaksi mencantumkan **Jenis Belanja** (`Jewel`, `Non-jewel`, atau `Belum dikategorikan` untuk data lama), **Kategori**, tarif, dan poin struk. CSV rekap mencantumkan jumlah struk dan poin Jewel/Non-jewel secara terpisah. Jenis diturunkan dari kategori yang tersimpan di server sehingga tidak ada flag terpisah yang bisa bertentangan dengan perhitungan poin.
+
+## Tampilan poin dan pembaruan halaman
+
+Podium dan tabel publik menampilkan poin (contoh `10 poin`), tanpa memformat skor sebagai rupiah. Jika API mengirim poin kosong/tidak valid, tampilan mempertahankan data valid terakhir dan menampilkan **DATA POIN BELUM SESUAI**; nominal rupiah tidak pernah ditebak menjadi poin. Format tampilan tidak menghasilkan `RpNaN` atau menyamarkan data invalid sebagai 0 poin.
+
+Server memberi HTML dan API penanda versi yang sama, menambahkan versi pada URL script, dan menonaktifkan cache file statis. Tab yang sudah memakai mekanisme versi ini akan memuat ulang otomatis bila server menjalankan versi tampilan baru, dengan mode videotron dan jeda animasi dipertahankan. Setelah update dari versi lama yang masih menampilkan `RpNaN`, tetap perlu hentikan server, `git pull origin main`, jalankan `python server.py`, lalu **Ctrl+F5 sekali** di semua layar. Tab versi lama belum memiliki mekanisme pembaruan tersebut.
+
+Tema Christmas menampilkan skor poin, pita permen, kartu podium dengan aksen emas, mainan animasi dan salju. Satu peserta ditempatkan di tengah; layout menyesuaikan dua/tiga peserta dan daftar peringkat berikutnya. Jeda animasi tidak menghentikan sinkronisasi poin atau membuat kartu yang baru diperbarui menghilang. Pengaturan reduced motion tetap didukung.
