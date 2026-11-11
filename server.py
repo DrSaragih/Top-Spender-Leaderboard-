@@ -19,6 +19,9 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('DATABASE_PATH', ROOT / '.data' / 'leaderboard.sqlite3'))
+CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
+              'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
+MIN_RECEIPT = 500_000
 MAX_TOTAL = 999_999_999  # Whole rupiah; keeps signage totals readable.
 SESSIONS = {}
 ATTEMPTS = {}
@@ -45,6 +48,33 @@ def initialize():
             amount INTEGER NOT NULL CHECK(amount>0), created_at TEXT NOT NULL
             DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
         ''')
+        columns = {row['name'] for row in db.execute('PRAGMA table_info(purchases)')}
+        if 'category' not in columns:
+            db.execute('ALTER TABLE purchases ADD COLUMN category TEXT')
+
+
+def receipt_points(amount, category):
+    if category not in CATEGORIES:
+        return None
+    if amount < MIN_RECEIPT:
+        return 0
+    return amount // CATEGORIES[category][1]
+
+
+def standings(db):
+    return db.execute("""SELECT c.name AS firstName,c.code AS memberCode,COUNT(*) AS count,
+      SUM(amount) AS total,COUNT(category) AS categorizedCount,
+      SUM(CASE WHEN category IN ('fnb','fashion') THEN amount ELSE 0 END) AS standardTotal,
+      SUM(CASE WHEN category IN ('electronics','jewelry') THEN amount ELSE 0 END) AS premiumTotal,
+      SUM(CASE WHEN category IS NULL THEN 1 ELSE 0 END) AS pendingCount,
+      SUM(CASE WHEN amount>=500000 AND category IS NOT NULL THEN 1 ELSE 0 END) AS eligibleCount,
+      SUM(CASE WHEN amount<500000 THEN 1 ELSE 0 END) AS belowMinimumCount,
+      SUM(CASE WHEN amount>=500000 AND category IN ('fnb','fashion') THEN amount/50000
+               WHEN amount>=500000 AND category IN ('electronics','jewelry') THEN amount/500000
+               ELSE 0 END) AS points
+      FROM purchases p JOIN customers c ON p.code=c.code GROUP BY c.code
+      ORDER BY (SUM(CASE WHEN amount>=500000 AND category IS NOT NULL THEN 1 ELSE 0 END)>0) DESC,
+               points DESC,c.code ASC""").fetchall()
 
 
 def collection_state(db):
@@ -104,19 +134,30 @@ class Handler(BaseHTTPRequestHandler):
         writer = csv.writer(output)
         with connect() as db:
             if kind == 'transactions':
-                writer.writerow(['ID Transaksi', 'Waktu UTC', 'Waktu WIB', 'Nama Depan', 'Member Code', 'Nominal IDR'])
-                rows = db.execute("SELECT p.id,p.created_at,c.name,c.code,p.amount FROM purchases p "
+                writer.writerow(['ID Transaksi', 'Waktu UTC', 'Waktu WIB', 'Nama Depan', 'Member Code', 'Nominal IDR', 'Kategori', 'Tarif IDR per Poin', 'Poin Struk', 'Status Poin'])
+                rows = db.execute("SELECT p.id,p.created_at,c.name,c.code,p.amount,p.category FROM purchases p "
                                   "JOIN customers c ON p.code=c.code ORDER BY p.rowid ASC")
                 for row in rows:
                     wib = datetime.fromisoformat(row['created_at'].replace('Z', '+00:00')).astimezone(
                         timezone(timedelta(hours=7))).isoformat()
-                    writer.writerow([csv_cell(v) for v in (row['id'], row['created_at'], wib, row['name'], row['code'], row['amount'])])
+                    writer.writerow([csv_cell(v) for v in (row['id'], row['created_at'], wib, row['name'], row['code'], row['amount'],
+                        CATEGORIES[row['category']][0] if row['category'] in CATEGORIES else 'Belum dikategorikan',
+                        CATEGORIES[row['category']][1] if row['category'] in CATEGORIES else '',
+                        receipt_points(row['amount'], row['category']) if row['category'] in CATEGORIES else '',
+                        'Belum dikategorikan' if row['category'] not in CATEGORIES else
+                        'Di bawah minimum Rp500000' if row['amount'] < MIN_RECEIPT else 'Memenuhi minimum')])
             else:
-                writer.writerow(['Peringkat', 'Nama Depan', 'Member Code', 'Jumlah Transaksi', 'Total IDR'])
-                rows = db.execute("SELECT c.name,c.code,COUNT(*) AS count,SUM(p.amount) AS total FROM purchases p "
-                                  "JOIN customers c ON p.code=c.code GROUP BY c.code ORDER BY total DESC,c.code ASC")
-                for rank, row in enumerate(rows, 1):
-                    writer.writerow([csv_cell(v) for v in (rank, row['name'], row['code'], row['count'], row['total'])])
+                writer.writerow(['Peringkat', 'Nama Depan', 'Member Code', 'Jumlah Transaksi', 'Total IDR',
+                                 'Total Poin', 'Belanja Kelompok 50000', 'Belanja Kelompok 500000',
+                                 'Struk Memenuhi Minimum', 'Struk di Bawah Minimum', 'Transaksi Belum Dikategorikan'])
+                rank = 0
+                for row in standings(db):
+                    if row['eligibleCount']:
+                        rank += 1
+                    writer.writerow([csv_cell(v) for v in (rank if row['eligibleCount'] else '', row['firstName'],
+                        row['memberCode'], row['count'], row['total'], row['points'], row['standardTotal'],
+                        row['premiumTotal'], row['eligibleCount'], row['belowMinimumCount'],
+                        row['pendingCount'])])
         body = output.getvalue().encode('utf-8-sig')
         self.send_response(200)
         self.send_header('Content-Type', 'text/csv; charset=utf-8')
@@ -179,25 +220,34 @@ class Handler(BaseHTTPRequestHandler):
             return
         if route == '/api/leaderboard':
             with connect() as db:
-                rows = db.execute('''SELECT name AS firstName, c.code AS memberCode,
-                  SUM(amount) AS total FROM customers c JOIN purchases p ON c.code=p.code
-                  GROUP BY c.code ORDER BY total DESC, c.code ASC LIMIT 10''').fetchall()
+                rows = [row for row in standings(db) if row['eligibleCount'] > 0][:10]
                 collection = collection_state(db)
-            return self.reply(200, {'customers': [dict(r) for r in rows], 'collection': collection})
+            customers = [{'firstName': row['firstName'], 'memberCode': row['memberCode'],
+                          'points': row['points']} for row in rows]
+            return self.reply(200, {'customers': customers, 'collection': collection})
         if route == '/api/collection':
             with connect() as db:
                 state = collection_state(db)
             return self.reply(200, state)
         if route == '/api/session':
             return self.reply(200, {'authenticated': self.authorized()})
+        if route == '/api/uncategorized':
+            if not self.authorized():
+                return self.reply(401, {'error': 'Silakan masuk kembali.'})
+            with connect() as db:
+                count = db.execute('SELECT COUNT(*) FROM purchases WHERE category IS NULL').fetchone()[0]
+                rows = db.execute('''SELECT p.id,c.name AS firstName,c.code AS memberCode,p.amount,
+                  p.created_at AS createdAt FROM purchases p JOIN customers c ON c.code=p.code
+                  WHERE p.category IS NULL ORDER BY p.rowid ASC LIMIT 100''').fetchall()
+            return self.reply(200, {'count': count, 'transactions': [dict(row) for row in rows]})
         if route == '/api/transactions':
             if not self.authorized():
                 return self.reply(401, {'error': 'Silakan masuk kembali.'})
             with connect() as db:
                 rows = db.execute('''SELECT p.id, c.name AS firstName, c.code AS memberCode,
-                  amount, created_at AS createdAt FROM purchases p JOIN customers c ON c.code=p.code
+                  amount, category, created_at AS createdAt FROM purchases p JOIN customers c ON c.code=p.code
                   ORDER BY p.rowid DESC LIMIT 100''').fetchall()
-            return self.reply(200, {'transactions': [dict(r) for r in rows]})
+            return self.reply(200, {'transactions': [{**dict(row), 'points': receipt_points(row['amount'], row['category'])} for row in rows]})
         # Explicit allowlist prevents exposing SQLite, source, or credentials.
         files = {'/': 'index.html', '/index.html': 'index.html', '/admin': 'admin.html',
                  '/admin.html': 'admin.html', '/admin.js': 'admin.js', '/leaderboard.js': 'leaderboard.js'}
@@ -287,6 +337,19 @@ class Handler(BaseHTTPRequestHandler):
                                "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (deadline,))
                 state = collection_state(db)
             return self.reply(200, state)
+        if route == '/api/transactions/classify':
+            key, category = data.get('id'), data.get('category')
+            if not isinstance(key, str) or not isinstance(category, str) or category not in CATEGORIES:
+                return self.reply(400, {'error': 'ID transaksi atau kategori tidak valid.'})
+            with connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                existing = db.execute('SELECT category FROM purchases WHERE id=?', (key,)).fetchone()
+                if not existing:
+                    return self.reply(404, {'error': 'Transaksi tidak ditemukan.'})
+                if existing['category'] is not None and existing['category'] != category:
+                    return self.reply(409, {'error': 'Kategori transaksi ini sudah ditetapkan.'})
+                db.execute('UPDATE purchases SET category=? WHERE id=? AND category IS NULL', (category, key))
+            return self.reply(200, {'ok': True})
         if route != '/api/transactions':
             return self.reply(404, {'error': 'Endpoint tidak ditemukan.'})
         name, code, amount, key = (data.get(k) for k in ('firstName', 'memberCode', 'amount', 'id'))
@@ -298,15 +361,20 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(400, {'error': 'Nominal harus rupiah bulat positif, maksimal Rp999.999.999.'})
         if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9-]{16,64}', key):
             return self.reply(400, {'error': 'ID transaksi tidak valid. Muat ulang halaman admin.'})
+        category = data.get('category')
+        if not isinstance(category, str) or category not in CATEGORIES:
+            return self.reply(400, {'error': 'Pilih kategori F&B, Fashion, Elektronik, atau Perhiasan.'})
         code = code.upper()
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            previous = db.execute('SELECT code, amount FROM purchases WHERE id=?', (key,)).fetchone()
+            previous = db.execute('SELECT code, amount, category FROM purchases WHERE id=?', (key,)).fetchone()
             customer = db.execute('SELECT name FROM customers WHERE code=?', (code,)).fetchone()
             if previous:
-                if previous['code'] != code or previous['amount'] != amount or not customer or customer['name'] != name:
+                if previous['code'] != code or previous['amount'] != amount or previous['category'] != category or not customer or customer['name'] != name:
                     return self.reply(409, {'error': 'ID transaksi sudah dipakai untuk data berbeda.'})
-                return self.reply(200, {'ok': True, 'duplicate': True})
+                member = next(row for row in standings(db) if row['memberCode'] == code)
+                return self.reply(200, {'ok': True, 'duplicate': True, 'memberPoints': member['points'],
+                    'transactionPoints': receipt_points(amount, category), 'eligible': amount >= MIN_RECEIPT})
             if collection_state(db)['closed']:
                 return self.reply(423, {'error': 'Pengumpulan struk sudah ditutup. Admin perlu memperpanjang batas waktu sebelum menambah transaksi.'})
             if customer and customer['name'] != name:
@@ -315,8 +383,10 @@ class Handler(BaseHTTPRequestHandler):
             if total + amount > MAX_TOTAL:
                 return self.reply(400, {'error': 'Total member melebihi batas Rp999.999.999.'})
             db.execute('INSERT OR IGNORE INTO customers(code,name) VALUES(?,?)', (code, name))
-            db.execute('INSERT INTO purchases(id,code,amount) VALUES(?,?,?)', (key, code, amount))
-        return self.reply(201, {'ok': True, 'duplicate': False})
+            db.execute('INSERT INTO purchases(id,code,amount,category) VALUES(?,?,?,?)', (key, code, amount, category))
+            member = next(row for row in standings(db) if row['memberCode'] == code)
+        return self.reply(201, {'ok': True, 'duplicate': False, 'memberPoints': member['points'],
+                    'transactionPoints': receipt_points(amount, category), 'eligible': amount >= MIN_RECEIPT})
 
 
 if __name__ == '__main__':

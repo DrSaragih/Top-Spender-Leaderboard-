@@ -1,6 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const rupiah = value => new Intl.NumberFormat('id-ID', {style:'currency',currency:'IDR',maximumFractionDigits:0}).format(value);
+const categories={fnb:['F&B',50000],fashion:['Fashion',50000],electronics:['Elektronik',500000],jewelry:['Perhiasan',500000]};
 let pending = null;
 let saving = false;
 function message(id, text, error=false) { $(id).textContent=text; $(id).classList.toggle('error',error); }
@@ -18,7 +19,7 @@ async function history() {
     const fragment=document.createDocumentFragment();
     for(const item of data.transactions){
       const row=document.createElement('tr');
-      for(const text of [new Date(item.createdAt).toLocaleString('id-ID'),item.firstName,item.memberCode,rupiah(item.amount)]){
+      for(const text of [new Date(item.createdAt).toLocaleString('id-ID'),item.firstName,item.memberCode,categories[item.category]?.[0]||'Belum dikategorikan',item.points===null?'Belum dihitung':item.points+' poin',rupiah(item.amount)]){
         const cell=document.createElement('td');cell.textContent=text;row.append(cell);
       }fragment.append(row);
     }
@@ -28,25 +29,33 @@ async function history() {
 }
 $('login-form').addEventListener('submit',async event=>{
   event.preventDefault();$('login-submit').disabled=true;
-  try{await request('/api/login',{password:$('password').value});$('password').value='';message('login-message','');showWorkspace(true);await history();await loadCollection();await loadShare();}
+  try{await request('/api/login',{password:$('password').value});$('password').value='';message('login-message','');showWorkspace(true);await history();await loadCollection();await loadShare();await loadLegacy();}
   catch(error){message('login-message',error.message,true);}finally{$('login-submit').disabled=false;}
 });
-$('amount').addEventListener('input',()=>{$('amount-preview').textContent=rupiah(Number($('amount').value)||0);});
+function updatePreview(){
+  const amount=Number($('amount').value)||0;const rate=categories[$('category').value]?.[1];
+  $('amount-preview').textContent=rupiah(amount);
+  $('points-preview').textContent=rate?(amount<500000?'0 poin — minimum Rp500.000 per struk. Nominal tetap dicatat.':`${Math.floor(amount/rate)} poin dari struk ini. Sisa nominal tidak digabung antarstruk.`):'Pilih kategori untuk melihat estimasi poin.';
+}
+$('amount').addEventListener('input',updatePreview);
+$('category').addEventListener('change',updatePreview);
 $('purchase-form').addEventListener('submit',async event=>{
   event.preventDefault();if(saving)return;
-  const data={firstName:$('first-name').value.trim(),memberCode:$('member-code').value.trim().toUpperCase(),amount:Number($('amount').value)};
+  const data={firstName:$('first-name').value.trim(),memberCode:$('member-code').value.trim().toUpperCase(),amount:Number($('amount').value),category:$('category').value};
   if(!/^\p{L}[\p{L}'-]*$/u.test(data.firstName)){message('save-message','Isi nama depan saja, tanpa spasi.',true);return;}
   if(!Number.isSafeInteger(data.amount)||data.amount<1||data.amount>999999999){message('save-message','Nominal harus rupiah bulat positif, maksimal Rp999.999.999.',true);return;}
+  if(!categories[data.category]){message('save-message','Pilih kategori belanja.',true);return;}
   // Keep an idempotency key on ambiguous network failures, including across reloads.
   const signature=JSON.stringify(data);
+  if(pending && !JSON.parse(pending.signature).category){const previous=JSON.parse(pending.signature);if(previous.firstName===data.firstName&&previous.memberCode===data.memberCode&&previous.amount===data.amount)pending.signature=signature;}
   if(pending && pending.signature!==signature){message('save-message','Ada transaksi yang belum terkonfirmasi. Kirim ulang data sebelumnya terlebih dahulu agar tidak tercatat ganda.',true);return;}
   if(!pending)pending={signature,id:crypto.randomUUID()};
   sessionStorage.setItem('toy-pending',JSON.stringify(pending));
   saving=true;$('save-purchase').disabled=true;message('save-message','Menyimpan pembelanjaan…');
   try{
-    await request('/api/transactions',{...data,id:pending.id});pending=null;sessionStorage.removeItem('toy-pending');
-    message('save-message',`${rupiah(data.amount)} untuk ${data.firstName} (${data.memberCode}) tersimpan. Leaderboard akan diperbarui otomatis.`);
-    $('purchase-form').reset();$('amount-preview').textContent=rupiah(0);await history();$('first-name').focus();
+    const result=await request('/api/transactions',{...data,id:pending.id});pending=null;sessionStorage.removeItem('toy-pending');
+    message('save-message',`${rupiah(data.amount)} untuk ${data.firstName} (${data.memberCode}) tersimpan. Struk ini: ${result.transactionPoints} poin${result.eligible?'':' (di bawah minimum Rp500.000)'}. Total member: ${result.memberPoints} poin. Leaderboard diperbarui otomatis.`);
+    $('purchase-form').reset();updatePreview();await history();$('first-name').focus();
   }catch(error){if(error.status===400||error.status===409||error.status===423){pending=null;sessionStorage.removeItem('toy-pending');}message('save-message',`${error.message} Data tetap di formulir; Anda dapat mencoba menyimpan kembali.`,true);}
   finally{saving=false;$('save-purchase').disabled=false;}
 });
@@ -55,8 +64,8 @@ $('refresh-history').addEventListener('click',history);
 (async()=>{
   try{
     const saved=sessionStorage.getItem('toy-pending');
-    if(saved){pending=JSON.parse(saved);const data=JSON.parse(pending.signature);$('first-name').value=data.firstName;$('member-code').value=data.memberCode;$('amount').value=data.amount;$('amount-preview').textContent=rupiah(data.amount);message('save-message','Transaksi sebelumnya belum terkonfirmasi. Simpan kembali untuk memeriksa hasil tanpa duplikasi.');}
-    const state=await request('/api/session');showWorkspace(state.authenticated);if(state.authenticated){await history();await loadCollection();await loadShare();}
+    if(saved){pending=JSON.parse(saved);const data=JSON.parse(pending.signature);$('first-name').value=data.firstName;$('member-code').value=data.memberCode;$('amount').value=data.amount;$('category').value=data.category||'';updatePreview();message('save-message',data.category?'Transaksi sebelumnya belum terkonfirmasi. Simpan kembali untuk memeriksa hasil tanpa duplikasi.':'Permintaan versi lama belum terkonfirmasi. Pilih kategori sesuai struk lalu simpan kembali; ID lama tetap digunakan untuk mencegah duplikasi.');}
+    const state=await request('/api/session');showWorkspace(state.authenticated);if(state.authenticated){await history();await loadCollection();await loadShare();await loadLegacy();}
   }catch(error){message('login-message','Tidak dapat terhubung ke server. Muat ulang setelah koneksi pulih.',true);}
 })();
 
@@ -126,3 +135,25 @@ $('download-qr').addEventListener('click',async()=>{
   try{await downloadFile('/api/share/qr.svg','toy-factory-qr.svg');}
   catch(error){message('share-message',error.message,true);}
 });
+
+async function loadLegacy(){
+  try{
+    const data=await request('/api/uncategorized');$('legacy-card').hidden=data.count===0;
+    $('legacy-count').textContent=`${data.count} transaksi belum dikategorikan. Menampilkan ${data.transactions.length} transaksi terlama; daftar akan diperbarui setelah disimpan.`;
+    $('legacy-list').replaceChildren();
+    for(const item of data.transactions){
+      const row=document.createElement('div');row.className='actions';
+      const label=document.createElement('p');label.textContent=`${new Date(item.createdAt).toLocaleString('id-ID')} · ${item.firstName} · ${item.memberCode} · ${rupiah(item.amount)}`;
+      const select=document.createElement('select');select.setAttribute('aria-label','Kategori transaksi '+item.id);select.style.cssText='padding:12px;max-width:100%;font:inherit;border:1px solid #b8cad5;border-radius:9px';
+      select.append(new Option('Pilih kategori',''));
+      for(const [key,[name,rate]] of Object.entries(categories))select.append(new Option(`${name} — ${rupiah(rate)} / poin`,key));
+      const button=document.createElement('button');button.type='button';button.textContent='Simpan kategori';
+      button.addEventListener('click',async()=>{
+        if(!select.value){message('legacy-message','Pilih kategori sesuai struk.',true);return;}
+        button.disabled=true;
+        try{await request('/api/transactions/classify',{id:item.id,category:select.value});message('legacy-message','Kategori tersimpan dan poin dihitung ulang.');await loadLegacy();await history();}
+        catch(error){message('legacy-message',error.message,true);button.disabled=false;}
+      });row.append(label,select,button);$('legacy-list').append(row);
+    }
+  }catch(error){message('history-message','Transaksi lama belum dapat diperiksa: '+error.message,true);}
+}

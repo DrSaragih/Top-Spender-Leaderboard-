@@ -1,6 +1,6 @@
 # Christmas Toy Factory · Midnight Sale
 
-Leaderboard untuk 12 Desember 2026 dengan halaman admin, penyimpanan SQLite, dan sinkronisasi publik setiap 3 detik. Tidak ada data pelanggan contoh yang dimasukkan ke database.
+Leaderboard poin untuk 12 Desember 2026 dengan halaman admin, penyimpanan SQLite, dan sinkronisasi publik setiap 3 detik. Tidak ada data pelanggan contoh yang dimasukkan ke database.
 
 ## Menjalankan
 
@@ -26,10 +26,10 @@ Semua perangkat harus membuka URL server yang sama. HTML yang dibuka langsung da
 
 1. Login di `/admin` menggunakan kata sandi server.
 2. Isi nama depan, member code, dan nominal **transaksi baru** dalam rupiah bulat.
-3. Simpan. Transaksi member dengan kode yang sama akan dijumlahkan; nama depan harus konsisten. Kode otomatis dijadikan huruf besar.
+3. Simpan. Pilih kategori sesuai satu struk. Poin per struk dijumlahkan untuk member dengan kode yang sama; nama depan harus konsisten. Kode otomatis dijadikan huruf besar.
 4. Leaderboard mengambil data terbaru setiap 3 detik tanpa memuat ulang halaman atau mengulang animasi saat data tidak berubah.
 
-Nominal transaksi dan total per member dibatasi Rp999.999.999. Peringkat menampilkan 10 member dengan total tertinggi; total sama diurutkan menurut member code. Riwayat admin menampilkan 100 transaksi terakhir dengan waktu sesuai zona perangkat. Nama depan maksimal 40 huruf (boleh apostrof/tanda hubung); member code maksimal 24 huruf/angka/tanda hubung. Sesi admin berakhir setelah 12 jam atau ketika server restart.
+Nominal transaksi dan total per member dibatasi Rp999.999.999. Peringkat menampilkan 10 member dengan poin tertinggi dari struk yang memenuhi minimum dan sudah berkategori; poin sama diurutkan menurut member code. Nominal rupiah tidak menjadi penentu urutan saat poin sama. Riwayat admin menampilkan 100 transaksi terakhir dengan waktu sesuai zona perangkat. Nama depan maksimal 40 huruf (boleh apostrof/tanda hubung); member code maksimal 24 huruf/angka/tanda hubung. Sesi admin berakhir setelah 12 jam atau ketika server restart.
 
 Permintaan simpan memakai ID transaksi unik. Jika koneksi terputus saat menyimpan, gunakan kembali data di formulir dan klik simpan lagi; server memastikan ID yang sama tidak tercatat dua kali. Data permintaan yang belum terkonfirmasi dipertahankan di tab admin melalui sessionStorage. Ini tidak menyimpan kata sandi. Jangan mengubah input transaksi yang belum terkonfirmasi sampai hasilnya diketahui.
 
@@ -69,3 +69,26 @@ CSV adalah arsip/tabulasi, bukan backup database yang bisa langsung di-restore a
 QR dibuat lokal pada server dengan `qrcode==8.2`; tidak mengirim URL ke layanan QR pihak ketiga. Server memakai `PUBLIC_URL` jika diatur, atau `RENDER_EXTERNAL_URL` yang disediakan Render. Hanya origin HTTPS tanpa path/query yang diterima. Tanpa alamat publik yang valid, admin menampilkan petunjuk hosting dan tidak membuat QR localhost. QR mengarah ke `/`, tidak mengandung kredensial admin. Saat ganti domain, unduh dan cetak ulang QR. Tautan videotron memakai `/?display=screen`.
 
 Konfigurasi Render dan langkah aktivasi ada di [DEPLOY_RENDER.md](DEPLOY_RENDER.md). QR tidak menyediakan internet: laptop admin, HP pelanggan, dan videotron boleh memakai jaringan berbeda tetapi tetap membutuhkan koneksi internet ke URL hosting yang sama.
+
+## Aturan poin dan minimum struk
+
+Minimum **Rp500.000 per struk berlaku untuk semua kategori**. Setiap input adalah satu struk. Jangan menjumlahkan dua struk kecil menjadi satu transaksi agar lolos minimum.
+
+| Kategori | Nilai belanja untuk 1 poin | Contoh 1 struk Rp500.000 |
+| --- | --- | --- |
+| F&B | Rp50.000 | 10 poin |
+| Fashion | Rp50.000 | 10 poin |
+| Elektronik | Rp500.000 | 1 poin |
+| Perhiasan | Rp500.000 | 1 poin |
+
+Poin = `floor(nominal struk / tarif kategori)` hanya jika nominal satu struk minimal Rp500.000. Pembulatan dilakukan **per struk**, lalu poin dijumlahkan per member. Sisa rupiah tidak diakumulasikan, termasuk antar kategori bertarif sama. Dua struk Elektronik masing-masing Rp750.000 menghasilkan 1 + 1 = 2 poin; dua struk Fashion masing-masing Rp525.000 menghasilkan 10 + 10 = 20 poin.
+
+Struk di bawah minimum tetap dicatat untuk arsip, tetapi mendapat **0 poin**. Dua struk Rp250.000 tidak menghasilkan poin walaupun totalnya Rp500.000. Member yang belum mempunyai struk memenuhi minimum tidak muncul pada leaderboard. Admin melihat estimasi poin sebelum menyimpan dan total poin member dari server setelah tersimpan. Riwayat serta CSV transaksi mencantumkan kategori, tarif, poin per struk, dan status kelayakan. CSV rekap mencantumkan total poin, nominal rupiah, serta jumlah struk memenuhi minimum/belum berkategori.
+
+### Update database lama
+
+Backup database terlebih dahulu, hentikan proses, jalankan `git pull origin main`, instal dependency dengan `python -m pip install -r requirements.txt`, lalu mulai lagi `python server.py`. Startup menambah kolom kategori tanpa menghapus atau menebak kategori transaksi lama. Muat ulang tab admin dan semua layar leaderboard setelah update.
+
+Bagian admin **Kategorikan transaksi lama** menampilkan 100 struk belum berkategori per batch. Cocokkan nama, member code, nominal, dan waktu dengan struk asli, lalu pilih kategori. Batch berikutnya muncul otomatis. Penetapan kategori tetap dapat dilakukan setelah timer ditutup karena hanya memperbarui metadata transaksi yang sudah tercatat. Kategori yang sudah ditetapkan tidak bisa diganti melalui UI ini. Struk di bawah minimum tetap 0 poin. Transaksi belum berkategori tidak dihitung menjadi poin dan ditandai dalam ekspor; selesaikan pemeriksaan sebelum acara.
+
+Versi ini tetap menggunakan Python/SQLite. Migrasi Vercel/Firebase belum dilakukan.
