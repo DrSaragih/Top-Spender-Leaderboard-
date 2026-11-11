@@ -66,6 +66,11 @@ def standings(db):
       SUM(amount) AS total,COUNT(category) AS categorizedCount,
       SUM(CASE WHEN category IN ('fnb','fashion') THEN amount ELSE 0 END) AS standardTotal,
       SUM(CASE WHEN category IN ('electronics','jewelry') THEN amount ELSE 0 END) AS premiumTotal,
+      SUM(CASE WHEN category='jewelry' THEN 1 ELSE 0 END) AS jewelCount,
+      SUM(CASE WHEN category IN ('fnb','fashion','electronics') THEN 1 ELSE 0 END) AS nonJewelCount,
+      SUM(CASE WHEN amount>=500000 AND category='jewelry' THEN amount/500000 ELSE 0 END) AS jewelPoints,
+      SUM(CASE WHEN amount>=500000 AND category IN ('fnb','fashion') THEN amount/50000
+               WHEN amount>=500000 AND category='electronics' THEN amount/500000 ELSE 0 END) AS nonJewelPoints,
       SUM(CASE WHEN category IS NULL THEN 1 ELSE 0 END) AS pendingCount,
       SUM(CASE WHEN amount>=500000 AND category IS NOT NULL THEN 1 ELSE 0 END) AS eligibleCount,
       SUM(CASE WHEN amount<500000 THEN 1 ELSE 0 END) AS belowMinimumCount,
@@ -134,13 +139,14 @@ class Handler(BaseHTTPRequestHandler):
         writer = csv.writer(output)
         with connect() as db:
             if kind == 'transactions':
-                writer.writerow(['ID Transaksi', 'Waktu UTC', 'Waktu WIB', 'Nama Depan', 'Member Code', 'Nominal IDR', 'Kategori', 'Tarif IDR per Poin', 'Poin Struk', 'Status Poin'])
+                writer.writerow(['ID Transaksi', 'Waktu UTC', 'Waktu WIB', 'Nama Depan', 'Member Code', 'Nominal IDR', 'Jenis Belanja', 'Kategori', 'Tarif IDR per Poin', 'Poin Struk', 'Status Poin'])
                 rows = db.execute("SELECT p.id,p.created_at,c.name,c.code,p.amount,p.category FROM purchases p "
                                   "JOIN customers c ON p.code=c.code ORDER BY p.rowid ASC")
                 for row in rows:
                     wib = datetime.fromisoformat(row['created_at'].replace('Z', '+00:00')).astimezone(
                         timezone(timedelta(hours=7))).isoformat()
                     writer.writerow([csv_cell(v) for v in (row['id'], row['created_at'], wib, row['name'], row['code'], row['amount'],
+                        'Jewel' if row['category']=='jewelry' else 'Non-jewel' if row['category'] in CATEGORIES else 'Belum dikategorikan',
                         CATEGORIES[row['category']][0] if row['category'] in CATEGORIES else 'Belum dikategorikan',
                         CATEGORIES[row['category']][1] if row['category'] in CATEGORIES else '',
                         receipt_points(row['amount'], row['category']) if row['category'] in CATEGORIES else '',
@@ -149,7 +155,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 writer.writerow(['Peringkat', 'Nama Depan', 'Member Code', 'Jumlah Transaksi', 'Total IDR',
                                  'Total Poin', 'Belanja Kelompok 50000', 'Belanja Kelompok 500000',
-                                 'Struk Memenuhi Minimum', 'Struk di Bawah Minimum', 'Transaksi Belum Dikategorikan'])
+                                 'Struk Memenuhi Minimum', 'Struk di Bawah Minimum', 'Transaksi Belum Dikategorikan', 'Jumlah Struk Jewel', 'Jumlah Struk Non-jewel', 'Poin Jewel', 'Poin Non-jewel'])
                 rank = 0
                 for row in standings(db):
                     if row['eligibleCount']:
@@ -157,7 +163,7 @@ class Handler(BaseHTTPRequestHandler):
                     writer.writerow([csv_cell(v) for v in (rank if row['eligibleCount'] else '', row['firstName'],
                         row['memberCode'], row['count'], row['total'], row['points'], row['standardTotal'],
                         row['premiumTotal'], row['eligibleCount'], row['belowMinimumCount'],
-                        row['pendingCount'])])
+                        row['pendingCount'], row['jewelCount'], row['nonJewelCount'], row['jewelPoints'], row['nonJewelPoints'])])
         body = output.getvalue().encode('utf-8-sig')
         self.send_response(200)
         self.send_header('Content-Type', 'text/csv; charset=utf-8')

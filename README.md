@@ -92,3 +92,9 @@ Backup database terlebih dahulu, hentikan proses, jalankan `git pull origin main
 Bagian admin **Kategorikan transaksi lama** menampilkan 100 struk belum berkategori per batch. Cocokkan nama, member code, nominal, dan waktu dengan struk asli, lalu pilih kategori. Batch berikutnya muncul otomatis. Penetapan kategori tetap dapat dilakukan setelah timer ditutup karena hanya memperbarui metadata transaksi yang sudah tercatat. Kategori yang sudah ditetapkan tidak bisa diganti melalui UI ini. Struk di bawah minimum tetap 0 poin. Transaksi belum berkategori tidak dihitung menjadi poin dan ditandai dalam ekspor; selesaikan pemeriksaan sebelum acara.
 
 Versi ini tetap menggunakan Python/SQLite. Migrasi Vercel/Firebase belum dilakukan.
+
+### Pilihan Jewel / Non-jewel
+
+Form admin mewajibkan pilihan **Jewel / Perhiasan** atau **Non-jewel**. Jewel langsung memakai kategori Perhiasan (Rp500.000 per poin) tanpa memilih subkategori. Non-jewel membutuhkan pilihan F&B, Fashion, atau Elektronik: Elektronik tetap Rp500.000 per poin; F&B/Fashion Rp50.000 per poin. Mengubah jenis belanja langsung memperbarui pratinjau. Riwayat menampilkan jenis dan kategori.
+
+CSV transaksi mencantumkan **Jenis Belanja** (`Jewel`, `Non-jewel`, atau `Belum dikategorikan` untuk data lama), **Kategori**, tarif, dan poin struk. CSV rekap mencantumkan jumlah struk dan poin Jewel/Non-jewel secara terpisah. Jenis diturunkan dari kategori yang tersimpan di server sehingga tidak ada flag terpisah yang bisa bertentangan dengan perhitungan poin.

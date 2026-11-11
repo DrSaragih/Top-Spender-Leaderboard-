@@ -19,7 +19,7 @@ async function history() {
     const fragment=document.createDocumentFragment();
     for(const item of data.transactions){
       const row=document.createElement('tr');
-      for(const text of [new Date(item.createdAt).toLocaleString('id-ID'),item.firstName,item.memberCode,categories[item.category]?.[0]||'Belum dikategorikan',item.points===null?'Belum dihitung':item.points+' poin',rupiah(item.amount)]){
+      for(const text of [new Date(item.createdAt).toLocaleString('id-ID'),item.firstName,item.memberCode,item.category==='jewelry'?'Jewel':categories[item.category]?'Non-jewel':'Belum dikategorikan',categories[item.category]?.[0]||'Belum dikategorikan',item.points===null?'Belum dihitung':item.points+' poin',rupiah(item.amount)]){
         const cell=document.createElement('td');cell.textContent=text;row.append(cell);
       }fragment.append(row);
     }
@@ -32,8 +32,18 @@ $('login-form').addEventListener('submit',async event=>{
   try{await request('/api/login',{password:$('password').value});$('password').value='';message('login-message','');showWorkspace(true);await history();await loadCollection();await loadShare();await loadLegacy();}
   catch(error){message('login-message',error.message,true);}finally{$('login-submit').disabled=false;}
 });
+function selectedCategory(){
+  const type=document.querySelector('input[name="jewelry-status"]:checked')?.value;
+  return type==='jewelry'?'jewelry':type==='non-jewelry'?$('category').value:'';
+}
+function updatePurchaseType(){
+  const nonJewelry=document.querySelector('input[name="jewelry-status"]:checked')?.value==='non-jewelry';
+  $('category-field').hidden=!nonJewelry;$('category').disabled=!nonJewelry;
+  updatePreview();
+}
+for(const radio of document.querySelectorAll('input[name="jewelry-status"]'))radio.addEventListener('change',updatePurchaseType);
 function updatePreview(){
-  const amount=Number($('amount').value)||0;const rate=categories[$('category').value]?.[1];
+  const amount=Number($('amount').value)||0;const rate=categories[selectedCategory()]?.[1];
   $('amount-preview').textContent=rupiah(amount);
   $('points-preview').textContent=rate?(amount<500000?'0 poin — minimum Rp500.000 per struk. Nominal tetap dicatat.':`${Math.floor(amount/rate)} poin dari struk ini. Sisa nominal tidak digabung antarstruk.`):'Pilih kategori untuk melihat estimasi poin.';
 }
@@ -41,7 +51,7 @@ $('amount').addEventListener('input',updatePreview);
 $('category').addEventListener('change',updatePreview);
 $('purchase-form').addEventListener('submit',async event=>{
   event.preventDefault();if(saving)return;
-  const data={firstName:$('first-name').value.trim(),memberCode:$('member-code').value.trim().toUpperCase(),amount:Number($('amount').value),category:$('category').value};
+  const data={firstName:$('first-name').value.trim(),memberCode:$('member-code').value.trim().toUpperCase(),amount:Number($('amount').value),category:selectedCategory()};
   if(!/^\p{L}[\p{L}'-]*$/u.test(data.firstName)){message('save-message','Isi nama depan saja, tanpa spasi.',true);return;}
   if(!Number.isSafeInteger(data.amount)||data.amount<1||data.amount>999999999){message('save-message','Nominal harus rupiah bulat positif, maksimal Rp999.999.999.',true);return;}
   if(!categories[data.category]){message('save-message','Pilih kategori belanja.',true);return;}
@@ -55,7 +65,7 @@ $('purchase-form').addEventListener('submit',async event=>{
   try{
     const result=await request('/api/transactions',{...data,id:pending.id});pending=null;sessionStorage.removeItem('toy-pending');
     message('save-message',`${rupiah(data.amount)} untuk ${data.firstName} (${data.memberCode}) tersimpan. Struk ini: ${result.transactionPoints} poin${result.eligible?'':' (di bawah minimum Rp500.000)'}. Total member: ${result.memberPoints} poin. Leaderboard diperbarui otomatis.`);
-    $('purchase-form').reset();updatePreview();await history();$('first-name').focus();
+    $('purchase-form').reset();updatePurchaseType();await history();$('first-name').focus();
   }catch(error){if(error.status===400||error.status===409||error.status===423){pending=null;sessionStorage.removeItem('toy-pending');}message('save-message',`${error.message} Data tetap di formulir; Anda dapat mencoba menyimpan kembali.`,true);}
   finally{saving=false;$('save-purchase').disabled=false;}
 });
@@ -64,7 +74,7 @@ $('refresh-history').addEventListener('click',history);
 (async()=>{
   try{
     const saved=sessionStorage.getItem('toy-pending');
-    if(saved){pending=JSON.parse(saved);const data=JSON.parse(pending.signature);$('first-name').value=data.firstName;$('member-code').value=data.memberCode;$('amount').value=data.amount;$('category').value=data.category||'';updatePreview();message('save-message',data.category?'Transaksi sebelumnya belum terkonfirmasi. Simpan kembali untuk memeriksa hasil tanpa duplikasi.':'Permintaan versi lama belum terkonfirmasi. Pilih kategori sesuai struk lalu simpan kembali; ID lama tetap digunakan untuk mencegah duplikasi.');}
+    if(saved){pending=JSON.parse(saved);const data=JSON.parse(pending.signature);$('first-name').value=data.firstName;$('member-code').value=data.memberCode;$('amount').value=data.amount;$('category').value=data.category==='jewelry'?'':data.category||'';if(data.category){document.querySelector(`input[name="jewelry-status"][value="${data.category==='jewelry'?'jewelry':'non-jewelry'}"]`).checked=true;}updatePurchaseType();message('save-message',data.category?'Transaksi sebelumnya belum terkonfirmasi. Simpan kembali untuk memeriksa hasil tanpa duplikasi.':'Permintaan versi lama belum terkonfirmasi. Pilih kategori sesuai struk lalu simpan kembali; ID lama tetap digunakan untuk mencegah duplikasi.');}
     const state=await request('/api/session');showWorkspace(state.authenticated);if(state.authenticated){await history();await loadCollection();await loadShare();await loadLegacy();}
   }catch(error){message('login-message','Tidak dapat terhubung ke server. Muat ulang setelah koneksi pulih.',true);}
 })();

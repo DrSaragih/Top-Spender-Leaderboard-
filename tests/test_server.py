@@ -253,6 +253,19 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(len(self.call('/api/transactions')[1]['transactions']),1)
         self.assertEqual(self.call('/api/transactions')[1]['transactions'][0]['amount'],500000)
 
+    def test_jewel_flag_and_points_match_csv_category(self):
+        for category, amount in [('jewelry',750000),('fnb',500000),('fashion',500000),('electronics',1000000)]:
+            self.call('/api/transactions',self.purchase(category=category,amount=amount))
+        rows=list(csv.DictReader(io.StringIO(self.fetch_raw('/api/export/transactions.csv')[2].decode('utf-8-sig'))))
+        self.assertEqual([row['Jenis Belanja'] for row in rows],['Jewel','Non-jewel','Non-jewel','Non-jewel'])
+        self.assertEqual([row['Poin Struk'] for row in rows],['1','10','10','2'])
+        summary=list(csv.DictReader(io.StringIO(self.fetch_raw('/api/export/members.csv')[2].decode('utf-8-sig'))))[0]
+        self.assertEqual(summary['Jumlah Struk Jewel'],'1')
+        self.assertEqual(summary['Jumlah Struk Non-jewel'],'3')
+        self.assertEqual(summary['Poin Jewel'],'1')
+        self.assertEqual(summary['Poin Non-jewel'],'22')
+        self.assertEqual(summary['Total Poin'],'23')
+
     def test_original_database_schema_is_migrated_idempotently(self):
         legacy=Path(self.temp.name)/('legacy-'+str(uuid.uuid4())+'.sqlite3')
         with patch.object(app,'DB',legacy):
