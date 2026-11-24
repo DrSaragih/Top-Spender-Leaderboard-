@@ -293,7 +293,7 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(status,200)
         self.assertIn('image/png',headers['Content-Type'])
         self.assertTrue(content.startswith(b'\x89PNG\r\n\x1a\n'))
-        for name in ('joy-bear-factory.png','joy-plush-bear.png','joy-crystal-globe.png','joy-couture-gifts.png'):
+        for name in ('joy-left-factory.png','joy-bear-factory.png','joy-plush-bear.png','joy-crystal-globe.png','joy-couture-gifts.png'):
             status, headers, content = self.fetch_raw('/assets/'+name)
             self.assertEqual(status,200)
             self.assertIn('image/png',headers['Content-Type'])

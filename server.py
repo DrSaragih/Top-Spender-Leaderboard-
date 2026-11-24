@@ -21,10 +21,10 @@ ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('DATABASE_PATH', ROOT / '.data' / 'leaderboard.sqlite3'))
 DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'christmas.css', 'motion.js',
                  'assets/joy-crown.svg', 'assets/joy-sparkle.svg', 'assets/joy-clockwork.svg',
-                 'assets/joy-workshop.svg', 'assets/joy-bear-factory.png',
+                 'assets/joy-workshop.svg', 'assets/joy-left-factory.png',
                  'assets/bears/bear-wave.png', 'assets/bears/bear-jump.png', 'assets/bears/bear-dance.png',
                  'assets/bears/bear-candy.png', 'assets/bears/bear-gift.png', 'assets/bears/bear-cozy.png',
-                 'assets/bears/festive-ornaments.png', 'assets/fonts/BerkshireSwash-Regular.ttf')
+                 'assets/joy-bauble.svg', 'assets/fonts/BerkshireSwash-Regular.ttf')
 DISPLAY_VERSION = hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in DISPLAY_FILES)).hexdigest()[:16]
 CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
               'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
@@ -271,7 +271,7 @@ class Handler(BaseHTTPRequestHandler):
             'joy-robot.svg', 'joy-train.svg', 'joy-gift.svg', 'joy-moon.svg',
             'joy-crown.svg', 'joy-sparkle.svg', 'joy-factory-parade.png',
             'joy-bear.svg', 'joy-tree.svg', 'joy-bauble.svg', 'joy-snowglobe.svg',
-            'joy-clockwork.svg', 'joy-workshop.svg', 'joy-bear-factory.png',
+            'joy-clockwork.svg', 'joy-workshop.svg', 'joy-bear-factory.png', 'joy-left-factory.png',
             'joy-plush-bear.png', 'joy-crystal-globe.png', 'joy-couture-gifts.png',
             'fonts/BerkshireSwash-Regular.ttf', 'bears/bear-wave.png', 'bears/bear-jump.png',
             'bears/bear-dance.png', 'bears/bear-candy.png', 'bears/bear-gift.png',

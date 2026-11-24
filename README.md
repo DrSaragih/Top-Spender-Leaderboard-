@@ -107,7 +107,7 @@ Server memberi HTML dan API penanda versi yang sama, menambahkan versi pada URL 
 
 Tema **Joy Factory Through The Night** memakai latar navy malam, kartu pemenang ivory/emas, dan angka poin besar. Halaman publik hanya menampilkan informasi leaderboard, indikator koneksi, serta timer ringkas jika diaktifkan. Hero promosi, ticker, tanggal dekoratif dan teks footer sudah dihilangkan. Dekorasi pabrik mainan berada di bawah panel data. Satu peserta ditempatkan di tengah; layout menyesuaikan dua/tiga peserta dan daftar peringkat berikutnya. Pesan tambahan hanya muncul saat data/koneksi bermasalah atau pengumpulan ditutup.
 
-Aset aktif memakai enam pose beruang dan satu trio ornamen PNG asli dari Bear.zip kiriman pengguna. Podium, pendamping judul, dan sisi pabrik menggunakan pose yang berbeda. Panorama pabrik tetap memakai ilustrasi versi sebelumnya; mahkota, bintang, dan detail arsitektur memakai SVG orisinal. Semua aset dilayani oleh server aplikasi. Dekorasi dan salju berada di belakang panel data yang solid.
+Aset aktif memakai enam pose beruang asli dari Bear.zip kiriman pengguna, rumah pabrik baru di kiri bawah, serta ornamen bola SVG awal yang kini bercahaya. Podium, pendamping judul, dan dekorasi bawah menggunakan pose beruang yang berbeda; mahkota, bintang, dan detail arsitektur memakai SVG orisinal. Semua aset dilayani oleh server aplikasi. Dekorasi dan salju berada di belakang panel data yang solid.
 
 Tekan **M** untuk jeda/putar animasi, **R** untuk mengulang sequence pembuka, **F** untuk fullscreen pada browser yang mendukung. Untuk menampilkan tombol operator, tambahkan `?controls=1` atau `?display=screen&controls=1`. Secara default tombol tersembunyi dari layar pelanggan. Jeda animasi tidak menghentikan sinkronisasi poin. Pengaturan reduced motion perangkat tetap didukung.
 
@@ -143,7 +143,7 @@ Pintasan **R**/tombol **Putar sequence** hanya mengulang pembuka. Jeda **M**, pe
 
 ### Christmas Bear & Toy Factory
 
-Komposisi memakai ketujuh aset asli Bear.zip: beruang melambai, melompat dan menari pada podium; beruang candy cane dan hadiah di sisi pabrik; beruang santai di samping judul serta layar kosong; dan trio ornamen ruby/navy/ivory di atas. Tidak ada kereta yang melintas. Panorama utama tetap menampilkan kereta sebagai bagian statis ilustrasi. Dekorasi bawah dibatasi tingginya agar pabrik tidak tertutup peringkat; figur samping disembunyikan pada HP/tablet agar tidak bertumpuk.
+Komposisi memakai enam beruang asli Bear.zip: pose melambai, melompat dan menari pada podium; pose santai di samping judul serta layar kosong; pose candy cane di tengah bawah; dan pose hadiah di kanan bawah. Rumah pabrik baru menempati sisi kiri. Bola atas memakai aset SVG awal dengan warna ruby/navy/ivory serta cahaya dan kilau. Trio ornamen PNG kiriman tetap disimpan sebagai arsip. Dekorasi dibatasi tingginya agar tidak tertutup peringkat. Pada HP/tablet, beruang tengah disembunyikan dan beruang hadiah tetap menemani rumah di kanan.
 
 Latar menggabungkan aurora navy/emas, bokeh bergerak, pita cahaya lengkung, gugusan lampu berbentuk pohon, sorot panggung, salju dan jejak cahaya. Diagram pohon besar digantikan oleh titik cahaya, sedangkan garis pabrik dan roda gigi diperhalus. Kolam elemen tetap berisi 24 bokeh, 84 titik pohon dan 36 salju; detail dikurangi pada HP. Tidak ada loop JavaScript per frame.
 
@@ -155,4 +155,10 @@ Judul publik menjadi **Top Spender**, memakai Berkshire Swash yang dilayani dari
 
 ### Paket aset Bear.zip
 
-Ketujuh PNG kiriman dipakai langsung tanpa perubahan piksel dan diberi nama URL sederhana di `assets/bears`. Manifest mencatat nama asal serta SHA-256; pengujian server memverifikasi file yang disajikan sesuai manifest. Tujuh gambar hanya diunduh sekali per halaman dan dipakai kembali selama pembaruan poin, termasuk salinan maskot di layar kosong. Paket asli sekitar 14 MiB; nama, kode member dan poin tetap muncul sambil aset dimuat. Figur samping disembunyikan pada HP/tablet agar tidak bertumpuk. Font Top Spender, warna utama `#072768`, dan opacity rumah latar dipertahankan.
+Ketujuh PNG kiriman disimpan tanpa perubahan piksel dan diberi nama URL sederhana di `assets/bears`; enam beruang dipakai pada halaman aktif, sementara trio ornamen PNG telah diganti kembali dengan bola SVG awal sesuai permintaan terbaru. Manifest mencatat nama asal serta SHA-256; pengujian server memverifikasi file yang disajikan sesuai manifest. Enam figur beruang hanya diunduh sekali per halaman dan dipakai kembali selama pembaruan poin, termasuk salinan maskot di layar kosong. Paket asli sekitar 14 MiB; nama, kode member dan poin tetap muncul sambil aset dimuat. Beruang tengah disembunyikan pada HP/tablet agar rumah di kiri dan beruang hadiah di kanan tidak bertumpuk. Font Top Spender, warna utama `#072768`, dan opacity rumah latar dipertahankan.
+
+### Rumah kiri dan ornamen bercahaya
+
+Rumah pabrik baru `assets/joy-left-factory.png` dibuat sebagai bangunan utuh dengan jendela amber, atap bersalju, ornamen emas, dan workshop mainan. Rumah selalu berada di kiri bawah dengan skala responsif. Ilustrasi parade tengah sebelumnya tidak lagi dimuat.
+
+Aset `joy-bauble.svg` dipakai kembali untuk tiga bola di atas: ruby, navy, dan ivory. Halo berpendar, pantulan menyapu lacquer, dan kilau kecil berjalan bergantian. Sumber SVG diduplikasi dengan ID gradient/clip unik. Semua animasi mengikuti M, reduced motion, dan status tab. Poin serta timer tetap diperbarui saat animasi dijeda.

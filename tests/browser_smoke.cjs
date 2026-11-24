@@ -59,6 +59,8 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
     if(a||d.overflow||d.clipped)throw Error('Responsive layout failed '+width+' '+JSON.stringify({a,d}));
     if(await display.evaluate(()=>document.querySelector('.festival-footer').getBoundingClientRect().top<document.querySelector('.board-grid').getBoundingClientRect().bottom-1))throw Error('Factory scenery overlaps rankings '+width);
     if(width===1920||width===1280){if(await display.evaluate(()=>document.documentElement.scrollHeight>innerHeight))throw Error('Signage needs scrolling '+width);}
+    if(await display.locator('.factory-house').evaluate(e=>{const r=e.getBoundingClientRect(),stage=e.closest('.joy-stage').getBoundingClientRect();return r.left>stage.left+stage.width*.08||r.left+r.width/2>=stage.left+stage.width/2;}))throw Error('New house is not left aligned '+width);
+    if(await display.locator('.ornament-display').evaluate(e=>{const r=e.getBoundingClientRect();return r.left<0||r.right>innerWidth;}))throw Error('Ornaments clipped horizontally '+width);
     console.log('PASS viewport',width,height);
   }
   await display.setViewportSize({width:1920,height:1080});await display.screenshot({path:path.join(os.tmpdir(),'joy-leaderboard.png'),fullPage:true});
@@ -75,15 +77,19 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.evaluate(()=>{document.body.classList.remove('paused','celebrating');clearTimeout(celebrationTimer);clearTimeout(particleCleanup);document.getElementById('celebration-layer').replaceChildren();});
   await display.locator('.avatar[data-motion-toy=jump] .premium-figure').waitFor({state:'attached'});
   await display.locator('.avatar[data-motion-toy=dance] .premium-figure').waitFor({state:'attached'});
-  for(const key of ['bear','jump','dance','candy','gift','cozy','ornaments'])await display.locator('[data-motion-toy='+key+'] .premium-figure').first().waitFor({state:'attached'});
+  for(const key of ['bear','jump','dance','candy','gift','cozy'])await display.locator('[data-motion-toy='+key+'] .premium-figure').first().waitFor({state:'attached'});
   if(await display.locator('.factory-courier,.courier-track,.scene-train,[data-motion-toy=train],[data-motion-toy=robot],.winter-tree').count()!==0)throw Error('Old flat toys or passing train remain');
   if(await display.locator('.snowflake').count()!==36||await display.locator('.bokeh-light').count()!==24||await display.locator('.constellation-light').count()!==84)throw Error('Background pools are not bounded');
   if(!await display.evaluate(()=>{const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);return ids.length===new Set(ids).size;}))throw Error('Cloned SVG IDs conflict');
+  await display.locator('.ornament-art .bauble-sheen').first().waitFor({state:'attached'});
+  if(await display.locator('.ornament-art svg').count()!==3)throw Error('Original baubles not restored');
+  const shineBefore=await display.locator('.bauble-sheen').evaluateAll(nodes=>nodes.map(e=>getComputedStyle(e).translate).join('|'));
   const snowBefore=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
   const sculptureBefore=await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).transform);
   const bokehBefore=await display.locator('.bokeh-light').first().evaluate(e=>getComputedStyle(e).translate);
   await display.waitForTimeout(150);
   if(sculptureBefore===await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).transform))throw Error('Plush sculpture is not moving');
+  if(shineBefore===await display.locator('.bauble-sheen').evaluateAll(nodes=>nodes.map(e=>getComputedStyle(e).translate).join('|')))throw Error('Bauble reflection is not moving');
   if(bokehBefore===await display.locator('.bokeh-light').first().evaluate(e=>getComputedStyle(e).translate))throw Error('Bokeh is not moving');
   if(snowBefore===await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Snow is not moving');
   const pointsBeforeReplay=await display.locator('.first .amount').textContent();
@@ -118,6 +124,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.keyboard.press('m');
   if(await display.locator('body').getAttribute('data-sequence'))throw Error('Pause left a sequence active');
   if(await display.locator('.festival-confetti').count()!==0)throw Error('Pause left confetti active');
+  if(await display.locator('.ornament-aura').first().evaluate(e=>getComputedStyle(e).animationPlayState)!=='paused')throw Error('Pause did not stop ornament glow');
   const snowPaused=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
   await display.waitForTimeout(150);
   if(snowPaused!==await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Pause did not freeze background snow');
@@ -136,14 +143,14 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if((await display.locator('.board-grid').textContent()).includes('NaN'))throw Error('NaN leaked');
   if(await display.locator('.first .name').textContent()!=='Dewi')throw Error('Invalid update replaced valid winner');
   fixture=valid;await display.evaluate(()=>refreshLeaderboard());
-  if(illustrationLoads!==7)throw Error('Artwork was fetched again during point updates: '+illustrationLoads);
+  if(illustrationLoads!==6)throw Error('Artwork was fetched again during point updates: '+illustrationLoads);
   const version=valid.displayVersion;
   await display.evaluate(()=>{document.querySelector('meta[name="display-version"]').content='0000000000000000';setTimeout(refreshLeaderboard,10);});
   await display.waitForURL(url=>url.searchParams.get('v')===version);await display.locator('.first .name').waitFor({state:'visible'});
   if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Version update lost paused state');
   await admin.click('#logout');await admin.locator('#login-panel').waitFor({state:'visible'});
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('PASS: all seven Bear.zip originals, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
+  console.log('PASS: new left-aligned factory, restored sparkling baubles, six original bears, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
  }finally{
   if(browser)await browser.close();
   if(server&&server.exitCode===null)await new Promise(resolve=>{server.once('exit',resolve);server.kill();});

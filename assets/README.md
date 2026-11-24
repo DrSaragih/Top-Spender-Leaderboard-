@@ -9,20 +9,21 @@ Ketujuh PNG kiriman pengguna disalin langsung ke `assets/bears` tanpa crop, konv
 | `bears/bear-wave.png` | Beruang berdiri melambai | Podium pertama |
 | `bears/bear-jump.png` | Beruang melompat | Podium kedua |
 | `bears/bear-dance.png` | Beruang menari dengan satu kaki terangkat | Podium ketiga |
-| `bears/bear-candy.png` | Beruang membawa candy cane | Sisi kiri pabrik |
+| `bears/bear-candy.png` | Beruang membawa candy cane | Tengah dekorasi bawah pada layar besar |
 | `bears/bear-gift.png` | Beruang duduk memegang hadiah | Sisi kanan pabrik |
 | `bears/bear-cozy.png` | Beruang berbaring santai | Pendamping judul dan layar kosong |
-| `bears/festive-ornaments.png` | Trio ornamen ruby/navy/ivory | Ornamen gantung di bagian atas |
+| `bears/festive-ornaments.png` | Trio ornamen ruby/navy/ivory | Disimpan sebagai aset versi sebelumnya; ornamen aktif memakai SVG awal |
 
-Enam beruang berukuran 1254 × 1254 px; ornamen 1536 × 1024 px. Transparansi asli dipertahankan. Paket sekitar 14 MiB dimuat sekali per halaman; perubahan poin memakai gambar yang sudah dimuat.
+Enam beruang berukuran 1254 × 1254 px; ornamen 1536 × 1024 px. Transparansi asli dipertahankan. Arsip sekitar 14 MiB dipertahankan lengkap. Enam figur beruang (sekitar 12 MiB) dimuat sekali per halaman; perubahan poin memakai gambar yang sudah dimuat. Trio ornamen PNG tidak dimuat oleh halaman aktif.
 
 ## Aset pendukung aktif
 
-- `joy-bear-factory.png`: panorama pabrik beruang, conveyor hadiah, pohon Natal, toy soldiers dan kereta; 2172 × 724 px, PNG transparan. Merupakan ilustrasi dari versi sebelumnya. Kereta di dalamnya adalah bagian statis panorama, bukan kereta yang melintasi layar.
+- `joy-left-factory.png`: aset rumah pabrik baru, 1774 × 887 px, PNG transparan sekitar 1,94 MiB. Cottage navy/emas dengan atap bersalju, jendela hangat berisi mainan/beruang, pintu ruby, sayap workshop beroda gigi, dan pohon kecil. Dibuat dengan generator gambar yang tersedia dan disalin tanpa perubahan piksel dari `/workspace/generated_images/exec-9651c063-3599-44dd-9f7b-e39bcff6b38f.png`. Ditampilkan utuh di kiri bawah.
 - `joy-crown.svg`, `joy-sparkle.svg`: mahkota podium dan bintang dekoratif.
+- `joy-bauble.svg`: ornamen awal yang dipakai kembali sebagai tiga bola ruby, navy, dan ivory. CSS memberi warna lacquer, pantulan bergerak, halo hangat, dan kilau bergantian; SVG sumber tetap utuh.
 - `joy-clockwork.svg`, `joy-workshop.svg`: roda gigi serta arsitektur rumah/pabrik di belakang panel.
 
-Panorama pendukung dibuat dengan generator gambar pada sesi sebelumnya dan SVG ditulis langsung. Beruang serta ornamen aktif memakai file Bear.zip pengguna. Tidak ada ketergantungan runtime pada layanan gambar/editor pihak ketiga.
+Rumah baru dibuat dengan generator gambar dan SVG ditulis langsung. Enam beruang aktif memakai file Bear.zip pengguna. Tidak ada ketergantungan runtime pada layanan gambar/editor pihak ketiga.
 
 ## Font judul
 
@@ -30,14 +31,14 @@ Panorama pendukung dibuat dengan generator gambar pada sesi sebelumnya dan SVG d
 
 ## Motion dan penyajian
 
-Figur PNG digerakkan sebagai satu kesatuan: ayunan beruang melambai, pantulan lembut pada pose melompat, goyangan pose menari, gerak membungkuk saat pergantian juara, serta kilau di sekitar hadiah. Trio ornamen berayun perlahan. Gambar PNG tidak memiliki bagian tubuh yang dianimasikan terpisah.
+Figur PNG digerakkan sebagai satu kesatuan: ayunan beruang melambai, pantulan lembut pada pose melompat, goyangan pose menari, gerak membungkuk saat pergantian juara, serta kilau di sekitar hadiah. Tiga bola SVG awal berayun perlahan dengan halo, pantulan yang menyapu permukaan, dan sembilan kilau kecil. Seluruh efek memakai CSS, tanpa loop JavaScript per frame. Gambar PNG tidak memiliki bagian tubuh yang dianimasikan terpisah.
 
 `motion.js` mengunduh dan mendekode setiap figur PNG sekali per halaman, lalu menggunakan object URL yang sama pada semua salinan dan pembaruan peringkat. Kegagalan pemuatan dicoba lagi dengan jeda bertahap hingga satu menit; koneksi pulih juga memicu percobaan ulang. Placeholder dekoratif dipakai selama gambar belum siap, tanpa menyembunyikan nama atau poin. SVG yang digandakan memakai ID gradient/clip unik.
 
-Latar di `christmas.css` berisi aurora, bokeh emas, pita cahaya lengkung, gugusan lampu membentuk pohon, jejak cahaya, sorot panggung, dan salju. Jumlah elemen tetap: 24 bokeh, 84 titik pohon dan 36 salju. Detail dikurangi pada HP. Tidak ada loop JavaScript per frame atau pembuatan partikel terus-menerus. Semua dekorasi berada di belakang panel data yang solid. Tinggi panorama dibatasi agar tidak tertutup panel peringkat. Figur samping disembunyikan pada HP/tablet agar tidak bertumpuk dengan panorama.
+Latar di `christmas.css` berisi aurora, bokeh emas, pita cahaya lengkung, gugusan lampu membentuk pohon, jejak cahaya, sorot panggung, dan salju. Jumlah elemen tetap: 24 bokeh, 84 titik pohon dan 36 salju. Detail dikurangi pada HP. Tidak ada loop JavaScript per frame atau pembuatan partikel terus-menerus. Semua dekorasi berada di belakang panel data yang solid. Tinggi rumah dibatasi agar tidak tertutup panel peringkat. Rumah berada di kiri, beruang candy cane di tengah pada layar besar, dan beruang hadiah di kanan. HP/tablet menyembunyikan beruang tengah dan tetap menampilkan beruang hadiah di samping rumah. Posisi bola diskalakan untuk setiap layar agar tidak terpotong secara horizontal.
 
-M menjeda seluruh motion. Reduced motion menghentikan animasi dan menyembunyikan salju, bokeh, jejak cahaya serta kilau. Tab tersembunyi menjeda animasi dan membatalkan sequence/partikel sementara. R mengulang pembuka tanpa mengubah poin atau timer. Sequence pembuka 2,4 detik, kenaikan poin 1,4 detik, pergantian juara 3,4 detik.
+M menjeda seluruh motion. Reduced motion menghentikan animasi dan menyembunyikan salju, bokeh, jejak cahaya serta kilau, termasuk kilau bola. Halo tetap berupa cahaya statis saat reduced motion aktif. Tab tersembunyi menjeda animasi dan membatalkan sequence/partikel sementara. R mengulang pembuka tanpa mengubah poin atau timer. Sequence pembuka 2,4 detik, kenaikan poin 1,4 detik, pergantian juara 3,4 detik.
 
 ## Aset versi sebelumnya
 
-`joy-plush-bear.png`, `joy-crystal-globe.png`, `joy-couture-gifts.png`, `joy-bauble.svg`, `joy-factory-parade.png`, `joy-robot.svg`, `joy-train.svg`, `joy-gift.svg`, `joy-bear.svg`, `joy-tree.svg`, `joy-snowglobe.svg`, dan `joy-moon.svg` dipertahankan sebagai berkas lama, tetapi tidak dimuat oleh halaman aktif. Robot vektor, bola salju vektor, dan kereta yang melintas sudah dihapus dari komposisi.
+`joy-bear-factory.png`, `joy-plush-bear.png`, `joy-crystal-globe.png`, `joy-couture-gifts.png`, `joy-factory-parade.png`, `joy-robot.svg`, `joy-train.svg`, `joy-gift.svg`, `joy-bear.svg`, `joy-tree.svg`, `joy-snowglobe.svg`, dan `joy-moon.svg` dipertahankan sebagai berkas lama, tetapi tidak dimuat oleh halaman aktif. Robot vektor, bola salju vektor, dan kereta yang melintas sudah dihapus dari komposisi.

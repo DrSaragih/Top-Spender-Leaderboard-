@@ -1,7 +1,7 @@
 'use strict';
 // Presentation-only controller: never changes receipt data, ranking, points or timers.
 window.JoyMotion=(()=>{
-  const sources={bear:'bears/bear-wave.png',jump:'bears/bear-jump.png',dance:'bears/bear-dance.png',cozy:'bears/bear-cozy.png',ornaments:'bears/festive-ornaments.png',candy:'bears/bear-candy.png',gift:'bears/bear-gift.png',clockwork:'joy-clockwork.svg',workshop:'joy-workshop.svg'};
+  const sources={bear:'bears/bear-wave.png',jump:'bears/bear-jump.png',dance:'bears/bear-dance.png',cozy:'bears/bear-cozy.png',bauble:'joy-bauble.svg',candy:'bears/bear-candy.png',gift:'bears/bear-gift.png',clockwork:'joy-clockwork.svg',workshop:'joy-workshop.svg'};
   const templates=new Map(),bitmaps=new Map();let loading=null,sequenceTimer=null,sequenceToken=0,openingPlayed=false,assetInstance=0,retryTimer=null,retryAttempt=0;
   const preference=matchMedia('(prefers-reduced-motion: reduce)');
   const canPlay=()=>!document.body.classList.contains('paused')&&!preference.matches&&!document.hidden;
