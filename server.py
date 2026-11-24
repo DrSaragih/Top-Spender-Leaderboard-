@@ -19,9 +19,12 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('DATABASE_PATH', ROOT / '.data' / 'leaderboard.sqlite3'))
-DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'motion.js', 'assets/joy-robot.svg',
+DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'christmas.css', 'motion.js', 'assets/joy-robot.svg',
                  'assets/joy-train.svg', 'assets/joy-gift.svg', 'assets/joy-moon.svg',
-                 'assets/joy-crown.svg', 'assets/joy-sparkle.svg', 'assets/joy-factory-parade.png')
+                 'assets/joy-crown.svg', 'assets/joy-sparkle.svg', 'assets/joy-factory-parade.png',
+                 'assets/joy-bear.svg', 'assets/joy-tree.svg', 'assets/joy-bauble.svg',
+                 'assets/joy-snowglobe.svg', 'assets/joy-clockwork.svg', 'assets/joy-workshop.svg',
+                 'assets/joy-bear-factory.png')
 DISPLAY_VERSION = hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in DISPLAY_FILES)).hexdigest()[:16]
 CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
               'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
@@ -261,11 +264,14 @@ class Handler(BaseHTTPRequestHandler):
         # Explicit allowlist prevents exposing SQLite, source, or credentials.
         files = {'/': 'index.html', '/index.html': 'index.html', '/admin': 'admin.html',
                  '/admin.html': 'admin.html', '/admin.js': 'admin.js', '/leaderboard.js': 'leaderboard.js',
-                 '/leaderboard.css': 'leaderboard.css', '/admin.css': 'admin.css', '/motion.js': 'motion.js'}
+                 '/leaderboard.css': 'leaderboard.css', '/admin.css': 'admin.css', '/motion.js': 'motion.js',
+                 '/christmas.css': 'christmas.css'}
         if route.startswith('/assets/') and route.removeprefix('/assets/') in {
             'teddy-bear.svg', 'rocking-horse.svg', 'toy-blocks.svg',
             'joy-robot.svg', 'joy-train.svg', 'joy-gift.svg', 'joy-moon.svg',
-            'joy-crown.svg', 'joy-sparkle.svg', 'joy-factory-parade.png'}:
+            'joy-crown.svg', 'joy-sparkle.svg', 'joy-factory-parade.png',
+            'joy-bear.svg', 'joy-tree.svg', 'joy-bauble.svg', 'joy-snowglobe.svg',
+            'joy-clockwork.svg', 'joy-workshop.svg', 'joy-bear-factory.png'}:
             files[route] = route.lstrip('/')
         if route not in files:
             return self.reply(404, {'error': 'Halaman tidak ditemukan.'})

@@ -30,7 +30,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   }
   await purchase('Nadia','TF-001',750000,'jewelry');await display.locator('.first .amount').filter({hasText:'1 poin'}).waitFor({timeout:6000});
   await display.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth>0));
-  await display.locator('.first .robot-wave').waitFor({state:'attached'});
+  await display.locator('.first .bear-paw').waitFor({state:'attached'});
   if(await display.locator('.festival-confetti').count()!==0)throw Error('Opening fabricated a score celebration');
   await display.setViewportSize({width:1920,height:1080});await display.screenshot({path:path.join(os.tmpdir(),'joy-single.png'),fullPage:true});
   await purchase('Bima','TF-002',500000,'fnb');await display.locator('.first .name').filter({hasText:'Bima'}).waitFor({timeout:6000});
@@ -74,10 +74,17 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.locator('.avatar .train-wheel').first().waitFor({state:'attached'});
   await display.locator('.avatar .gift-lid').waitFor({state:'attached'});
   await display.locator('.factory-courier .train-wheel').first().waitFor({state:'attached'});
+  await display.locator('.tree-left .tree-lights').first().waitFor({state:'attached'});
+  await display.locator('.tree-right .tree-lights').first().waitFor({state:'attached'});
+  await display.locator('.workshop-globe .globe-bear').waitFor({state:'attached'});
+  if(await display.locator('.snowflake').count()!==36)throw Error('Snow particle pool is not bounded');
+  if(!await display.evaluate(()=>{const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);return ids.length===new Set(ids).size;}))throw Error('Cloned SVG IDs conflict');
+  const snowBefore=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
   const wheelBefore=await display.locator('.avatar .train-wheel').first().evaluate(e=>getComputedStyle(e).rotate);
   await display.waitForTimeout(150);
   const wheelAfter=await display.locator('.avatar .train-wheel').first().evaluate(e=>getComputedStyle(e).rotate);
   if(wheelBefore===wheelAfter)throw Error('Wheel is not actually moving');
+  if(snowBefore===await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Snow is not moving');
   const pointsBeforeReplay=await display.locator('.first .amount').textContent();
   await display.keyboard.press('r');
   if(await display.locator('body').getAttribute('data-sequence')!=='intro')throw Error('Replay shortcut failed');
@@ -110,6 +117,15 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.keyboard.press('m');
   if(await display.locator('body').getAttribute('data-sequence'))throw Error('Pause left a sequence active');
   if(await display.locator('.festival-confetti').count()!==0)throw Error('Pause left confetti active');
+  const snowPaused=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
+  await display.waitForTimeout(150);
+  if(snowPaused!==await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Pause did not freeze background snow');
+  await display.keyboard.press('r');
+  if(await display.locator('body').getAttribute('data-sequence'))throw Error('Replay ignored pause');
+  await display.emulateMedia({reducedMotion:'reduce'});
+  if(await display.locator('#winter-snow').isVisible())throw Error('Reduced motion left snow visible');
+  if(await display.locator('.first .bear-paw').evaluate(e=>getComputedStyle(e).animationName)!=='none')throw Error('Reduced motion left bear moving');
+  await display.emulateMedia({reducedMotion:'no-preference'});
 
   await display.evaluate(()=>{document.body.classList.add('paused');document.getElementById('celebration-layer').replaceChildren();});
   fixture=valid;await display.evaluate(()=>refreshLeaderboard());
@@ -125,7 +141,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Version update lost paused state');
   await admin.click('#logout');await admin.locator('#login-panel').waitFor({state:'visible'});
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('PASS: articulated toys, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, motion, offline recovery and logout.');
+  console.log('PASS: Christmas scenery, bounded moving snow, unique SVG IDs, bear motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
  }finally{
   if(browser)await browser.close();
   if(server&&server.exitCode===null)await new Promise(resolve=>{server.once('exit',resolve);server.kill();});

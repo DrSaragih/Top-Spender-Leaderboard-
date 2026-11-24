@@ -80,7 +80,7 @@ async function refreshLeaderboard(){
 }
 let celebrationTimer=null,particleCleanup=null;
 function setupFestival(){
-  const garland=$('festival-garland'),stars=$('festival-stars');
+  const garland=$('festival-garland'),stars=$('festival-stars'),snow=$('winter-snow');
   for(let i=0;i<22;i++){
     const bulb=element('i','festival-bulb');bulb.style.setProperty('--x',(2+i*96/21)+'%');
     bulb.style.setProperty('--drop',(10+Math.sin(i/21*Math.PI*2)**2*18)+'px');bulb.style.setProperty('--delay',(-i*.28)+'s');garland.append(bulb);
@@ -89,6 +89,13 @@ function setupFestival(){
     const star=element('img','festival-star');star.src='/assets/joy-sparkle.svg';star.alt='';
     star.style.setProperty('--x',((i*29)%98)+'%');star.style.setProperty('--y',((i*43)%95)+'%');
     star.style.setProperty('--size',(8+i%4*4)+'px');star.style.setProperty('--delay',(-i*.63)+'s');stars.append(star);
+  }
+  // A fixed particle pool: CSS handles motion without a frame loop or new nodes.
+  for(let i=0;i<36;i++){
+    const flake=element('i','snowflake'+(i%6===0?' snowflake-crystal':''));
+    flake.style.setProperty('--x',((i*37+3)%100)+'%');flake.style.setProperty('--size',(2+i%4*1.2)+'px');
+    flake.style.setProperty('--duration',(17+i%7*3)+'s');flake.style.setProperty('--delay',(-i*2.9)+'s');
+    flake.style.setProperty('--drift',((i%2?1:-1)*(20+i%5*13))+'px');snow.append(flake);
   }
 }
 function celebratePoints(championChanged=false){

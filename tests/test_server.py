@@ -278,17 +278,22 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(self.call('/api/leaderboard')[1]['displayVersion'],app.DISPLAY_VERSION)
 
     def test_theme_styles_and_original_assets_are_served(self):
-        for name in ('leaderboard.css','admin.css'):
+        for name in ('leaderboard.css','christmas.css','admin.css'):
             status, headers, content = self.fetch_raw('/'+name)
             self.assertEqual(status,200)
             self.assertIn('text/css',headers['Content-Type'])
             self.assertTrue(content)
-        for name in ('joy-robot.svg','joy-train.svg','joy-gift.svg','joy-moon.svg','joy-crown.svg','joy-sparkle.svg'):
+        for name in ('joy-robot.svg','joy-train.svg','joy-gift.svg','joy-moon.svg','joy-crown.svg','joy-sparkle.svg',
+                     'joy-bear.svg','joy-tree.svg','joy-bauble.svg','joy-snowglobe.svg','joy-clockwork.svg','joy-workshop.svg'):
             status, headers, content = self.fetch_raw('/assets/'+name)
             self.assertEqual(status,200)
             self.assertIn('image/svg+xml',headers['Content-Type'])
             self.assertIn(b'<svg',content)
         status, headers, content = self.fetch_raw('/assets/joy-factory-parade.png')
+        self.assertEqual(status,200)
+        self.assertIn('image/png',headers['Content-Type'])
+        self.assertTrue(content.startswith(b'\x89PNG\r\n\x1a\n'))
+        status, headers, content = self.fetch_raw('/assets/joy-bear-factory.png')
         self.assertEqual(status,200)
         self.assertIn('image/png',headers['Content-Type'])
         self.assertTrue(content.startswith(b'\x89PNG\r\n\x1a\n'))

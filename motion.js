@@ -1,15 +1,22 @@
 'use strict';
 // Presentation-only controller: never changes receipt data, ranking, points or timers.
 window.JoyMotion=(()=>{
-  const sources={robot:'joy-robot.svg',train:'joy-train.svg',gift:'joy-gift.svg'};
-  const templates=new Map();let loading=null,sequenceTimer=null,sequenceToken=0,openingPlayed=false;
+  const sources={bear:'joy-bear.svg',robot:'joy-robot.svg',train:'joy-train.svg',gift:'joy-gift.svg',tree:'joy-tree.svg',bauble:'joy-bauble.svg',globe:'joy-snowglobe.svg',clockwork:'joy-clockwork.svg',workshop:'joy-workshop.svg'};
+  const templates=new Map();let loading=null,sequenceTimer=null,sequenceToken=0,openingPlayed=false,assetInstance=0;
   const preference=matchMedia('(prefers-reduced-motion: reduce)');
   const canPlay=()=>!document.body.classList.contains('paused')&&!preference.matches&&!document.hidden;
   function paint(target,index){
-    const key=typeof index==='string'?index:['robot','train','gift'][index]||'robot';
+    const key=typeof index==='string'&&Object.hasOwn(sources,index)?index:['bear','train','gift'][index]||'bear';
     target.dataset.motionToy=key;
     if(templates.has(key)){
       const svg=document.importNode(templates.get(key),true);svg.classList.add('articulated-toy');
+      // Multiple trees/ornaments must keep independent gradient and clip IDs.
+      const ids=new Map(),prefix='joy-'+(++assetInstance)+'-';
+      for(const node of svg.querySelectorAll('[id]')){const id=node.id;ids.set(id,prefix+id);node.id=prefix+id;}
+      for(const node of svg.querySelectorAll('*'))for(const attr of [...node.attributes]){
+        const value=attr.value.replace(/url\(#([^)]+)\)/g,(match,id)=>ids.has(id)?'url(#'+ids.get(id)+')':match);
+        if(value!==attr.value)node.setAttribute(attr.name,value);
+      }
       svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');target.replaceChildren(svg);
     }else{
       const img=document.createElement('img');img.src='/assets/'+sources[key];img.alt='';img.width=100;img.height=100;target.replaceChildren(img);
