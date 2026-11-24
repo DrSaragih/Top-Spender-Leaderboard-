@@ -16,7 +16,8 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   const context=await browser.newContext({acceptDownloads:true});
   const errors=[];context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
   const display=await context.newPage();let illustrationLoads=0;display.on('request',request=>{if(/\/assets\/joy-(plush-bear|crystal-globe|couture-gifts)\.png/.test(request.url()))illustrationLoads++;});await display.goto(base+'/?display=screen');await display.locator('#empty-state').waitFor({state:'visible'});
-  if(await display.locator('h1').textContent()!=='LEADERBOARD')throw Error('Public title');
+  await display.evaluate(()=>document.fonts.ready);
+  if(await display.locator('h1').textContent()!=='Top Spender')throw Error('Public title');
   if(await display.locator('button:visible').count()!==0)throw Error('Customer-facing controls not hidden');
   if(await display.locator('.hero,.ticker,footer').count()!==0)throw Error('Promotional copy remains');
   const admin=await context.newPage();await admin.goto(base+'/admin');await admin.fill('#password',password);await admin.click('#login-submit');await admin.locator('#workspace').waitFor({state:'visible'});

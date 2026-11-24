@@ -11,6 +11,10 @@
 
 PNG dibuat dengan generator gambar yang tersedia pada sesi ini. File asli disimpan di `/workspace/generated_images` dan disalin tanpa crop atau perubahan piksel. SVG ditulis langsung. Tidak ada integrasi runtime dengan layanan gambar atau editor desain pihak ketiga.
 
+## Font judul
+
+`fonts/BerkshireSwash-Regular.ttf` adalah Berkshire Swash dari Google Fonts, dipakai pada judul Top Spender dan dilayani oleh server aplikasi. Lisensi SIL Open Font License disertakan di `fonts/OFL.txt`. Sumber: https://github.com/google/fonts/tree/main/ofl/berkshireswash
+
 ## Motion dan penyajian
 
 Ketiga figur PNG memakai bahan plush, velvet, kaca dan emas yang serasi dengan panorama pabrik. Figur digerakkan sebagai satu kesatuan dengan ayunan kecil, gerak membungkuk saat pergantian juara, halo di bawahnya, dan kilau bola kaca. Gambar PNG tidak memiliki bagian tubuh yang dianimasikan terpisah.

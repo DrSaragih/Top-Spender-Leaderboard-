@@ -25,7 +25,8 @@ DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'christmas.c
                  'assets/joy-bear.svg', 'assets/joy-tree.svg', 'assets/joy-bauble.svg',
                  'assets/joy-snowglobe.svg', 'assets/joy-clockwork.svg', 'assets/joy-workshop.svg',
                  'assets/joy-bear-factory.png', 'assets/joy-plush-bear.png',
-                 'assets/joy-crystal-globe.png', 'assets/joy-couture-gifts.png')
+                 'assets/joy-crystal-globe.png', 'assets/joy-couture-gifts.png',
+                 'assets/fonts/BerkshireSwash-Regular.ttf')
 DISPLAY_VERSION = hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in DISPLAY_FILES)).hexdigest()[:16]
 CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
               'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
@@ -273,7 +274,8 @@ class Handler(BaseHTTPRequestHandler):
             'joy-crown.svg', 'joy-sparkle.svg', 'joy-factory-parade.png',
             'joy-bear.svg', 'joy-tree.svg', 'joy-bauble.svg', 'joy-snowglobe.svg',
             'joy-clockwork.svg', 'joy-workshop.svg', 'joy-bear-factory.png',
-            'joy-plush-bear.png', 'joy-crystal-globe.png', 'joy-couture-gifts.png'}:
+            'joy-plush-bear.png', 'joy-crystal-globe.png', 'joy-couture-gifts.png',
+            'fonts/BerkshireSwash-Regular.ttf'}:
             files[route] = route.lstrip('/')
         if route not in files:
             return self.reply(404, {'error': 'Halaman tidak ditemukan.'})
@@ -281,7 +283,7 @@ class Handler(BaseHTTPRequestHandler):
         body = file.read_bytes()
         if files[route] == 'index.html':
             body = body.replace(b'__DISPLAY_VERSION__', DISPLAY_VERSION.encode())
-        mime = {'html': 'text/html', 'js': 'text/javascript', 'svg': 'image/svg+xml', 'css': 'text/css', 'png': 'image/png'}[file.suffix[1:]]
+        mime = {'html': 'text/html', 'js': 'text/javascript', 'svg': 'image/svg+xml', 'css': 'text/css', 'png': 'image/png', 'ttf': 'font/ttf'}[file.suffix[1:]]
         self.send_response(200)
         self.send_header('Content-Type', mime + '; charset=utf-8')
         self.send_header('Cache-Control', 'no-store, max-age=0')

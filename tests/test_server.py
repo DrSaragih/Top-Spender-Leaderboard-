@@ -302,6 +302,10 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(status,200)
         self.assertIn('text/javascript',headers['Content-Type'])
         self.assertIn(b'JoyMotion',content)
+        status, headers, content = self.fetch_raw('/assets/fonts/BerkshireSwash-Regular.ttf')
+        self.assertEqual(status,200)
+        self.assertIn('font/ttf',headers['Content-Type'])
+        self.assertTrue(content.startswith(b'\x00\x01\x00\x00'))
         self.assertEqual(self.fetch_raw('/assets/../server.py')[0],404)
 
     def test_original_database_schema_is_migrated_idempotently(self):

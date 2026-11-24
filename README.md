@@ -1,4 +1,4 @@
-# Joy Factory Through The Night · Leaderboard
+# Top Spender · Joy Factory Through The Night
 
 Leaderboard poin untuk 12 Desember 2026 dengan halaman admin, penyimpanan SQLite, dan sinkronisasi publik setiap 3 detik. Tidak ada data pelanggan contoh yang dimasukkan ke database.
 
@@ -148,3 +148,7 @@ Komposisi memakai beruang plush, bola kaca, serta kado dengan kuda goyang dalam 
 Latar menggabungkan aurora navy/emas, bokeh bergerak, pita cahaya lengkung, gugusan lampu berbentuk pohon, sorot panggung, salju dan jejak cahaya. Diagram pohon besar digantikan oleh titik cahaya, sedangkan garis pabrik dan roda gigi diperhalus. Kolam elemen tetap berisi 24 bokeh, 84 titik pohon dan 36 salju; detail dikurangi pada HP. Tidak ada loop JavaScript per frame.
 
 Reduced motion menghentikan semua animasi dan menyembunyikan salju, bokeh, jejak cahaya serta kilau. M menjeda latar dan figur sementara poin/timer tetap diperbarui. SVG yang digandakan mendapat ID gradient/clip unik. Semua aset dan stylesheet ikut penanda versi otomatis agar layar memuat versi terbaru setelah server dimulai ulang. Detail sumber, format dan penggunaan aset ada di [assets/README.md](assets/README.md).
+
+### Judul dan warna acara
+
+Judul publik menjadi **Top Spender**, memakai Berkshire Swash yang dilayani dari `assets/fonts/BerkshireSwash-Regular.ttf`. Font berlisensi SIL Open Font License; lisensi disertakan di `assets/fonts/OFL.txt`. Halaman tetap dapat memakai font lokal tanpa mengambil font dari pihak ketiga saat acara berjalan. Warna navy utama adalah `#072768`, dengan panel poin solid dan aksen ivory/emas. Opacity arsitektur rumah latar dinaikkan menjadi 24% pada layar besar dan 16% pada HP.
