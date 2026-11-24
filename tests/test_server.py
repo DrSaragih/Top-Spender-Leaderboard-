@@ -298,6 +298,12 @@ class ServerTest(unittest.TestCase):
             self.assertEqual(status,200)
             self.assertIn('image/png',headers['Content-Type'])
             self.assertTrue(content.startswith(b'\x89PNG\r\n\x1a\n'))
+        manifest = json.loads((app.ROOT / 'assets/bears/manifest.json').read_text())
+        for asset in manifest['assets']:
+            status, headers, content = self.fetch_raw('/assets/bears/'+asset['file'])
+            self.assertEqual(status,200)
+            self.assertIn('image/png',headers['Content-Type'])
+            self.assertEqual(hashlib.sha256(content).hexdigest(),asset['sha256'])
         status, headers, content = self.fetch_raw('/motion.js')
         self.assertEqual(status,200)
         self.assertIn('text/javascript',headers['Content-Type'])

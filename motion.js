@@ -1,12 +1,12 @@
 'use strict';
 // Presentation-only controller: never changes receipt data, ranking, points or timers.
 window.JoyMotion=(()=>{
-  const sources={bear:'joy-plush-bear.png',globe:'joy-crystal-globe.png',gifts:'joy-couture-gifts.png',bauble:'joy-bauble.svg',clockwork:'joy-clockwork.svg',workshop:'joy-workshop.svg'};
+  const sources={bear:'bears/bear-wave.png',jump:'bears/bear-jump.png',dance:'bears/bear-dance.png',cozy:'bears/bear-cozy.png',ornaments:'bears/festive-ornaments.png',candy:'bears/bear-candy.png',gift:'bears/bear-gift.png',clockwork:'joy-clockwork.svg',workshop:'joy-workshop.svg'};
   const templates=new Map(),bitmaps=new Map();let loading=null,sequenceTimer=null,sequenceToken=0,openingPlayed=false,assetInstance=0,retryTimer=null,retryAttempt=0;
   const preference=matchMedia('(prefers-reduced-motion: reduce)');
   const canPlay=()=>!document.body.classList.contains('paused')&&!preference.matches&&!document.hidden;
   function paint(target,index){
-    const key=typeof index==='string'&&Object.hasOwn(sources,index)?index:['bear','globe','gifts'][index]||'bear';
+    const key=typeof index==='string'&&Object.hasOwn(sources,index)?index:['bear','jump','dance'][index]||'bear';
     target.dataset.motionToy=key;
     if(bitmaps.has(key)){
       const img=document.createElement('img');img.src=bitmaps.get(key);img.alt='';img.width=320;img.height=320;

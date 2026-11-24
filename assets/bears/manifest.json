@@ -1,0 +1,54 @@
+{
+  "sourceArchive": "Bear.zip",
+  "assets": [
+    {
+      "source": "Bear/ChatGPT Image Nov 13, 2026, 01_33_19 PM-1.png",
+      "file": "bear-wave.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "dc93ee0fe263bbb846802ff0bf6bb4e0e83a1253aef51f2e386ff3f2dd927272"
+    },
+    {
+      "source": "Bear/ChatGPT Image Nov 13, 2026, 01_33_20 PM-2.png",
+      "file": "bear-gift.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "1b888f0dbb91c33f9989bcf54f70744c552b5c81d7c53090cd01ed76f48aa078"
+    },
+    {
+      "source": "Bear/ChatGPT Image Nov 13, 2026, 01_33_21 PM-3.png",
+      "file": "bear-jump.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "1a7a2c8e20c686e799b2f05af751f75602069f67dbdfce33f8e849ed4d584520"
+    },
+    {
+      "source": "Bear/ChatGPT Image Nov 13, 2026, 01_33_22 PM-4.png",
+      "file": "bear-dance.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "037f20c5101b4e4bd4cfed265e39e82d86f93d57a9d0c6cca0864b01efc3d9d2"
+    },
+    {
+      "source": "Bear/ChatGPT Image Nov 13, 2026, 01_33_23 PM-5.png",
+      "file": "bear-candy.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "1562cd230feeffe288bbbeaaaaa0d6ce744082c0076159cbd18bf2c99b2a875d"
+    },
+    {
+      "source": "Bear/ChatGPT Image Nov 13, 2026, 01_33_24 PM-6.png",
+      "file": "bear-cozy.png",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "44fbe778df3f883c6508e4d35dd00e51585a8347bb90cf93871690c9d282cbea"
+    },
+    {
+      "source": "Bear/Festive Ornament Trio.png",
+      "file": "festive-ornaments.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0f58159f9fdfb7474ec248244760bd3d6559d173b6846ba0afe3188ed5d392d0"
+    }
+  ]
+}

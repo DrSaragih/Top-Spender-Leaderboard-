@@ -15,7 +15,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   browser=await chromium.launch({executablePath,headless:true});
   const context=await browser.newContext({acceptDownloads:true});
   const errors=[];context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
-  const display=await context.newPage();let illustrationLoads=0;display.on('request',request=>{if(/\/assets\/joy-(plush-bear|crystal-globe|couture-gifts)\.png/.test(request.url()))illustrationLoads++;});await display.goto(base+'/?display=screen');await display.locator('#empty-state').waitFor({state:'visible'});
+  const display=await context.newPage();let illustrationLoads=0;display.on('request',request=>{if(/\/assets\/bears\/[^/?]+\.png/.test(request.url()))illustrationLoads++;});await display.goto(base+'/?display=screen');await display.locator('#empty-state').waitFor({state:'visible'});
   await display.evaluate(()=>document.fonts.ready);
   if(await display.locator('h1').textContent()!=='Top Spender')throw Error('Public title');
   if(await display.locator('button:visible').count()!==0)throw Error('Customer-facing controls not hidden');
@@ -73,8 +73,9 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.route('**/api/leaderboard',route=>route.fulfill({json:fixture}));
   await display.bringToFront();await display.emulateMedia({reducedMotion:'no-preference'});
   await display.evaluate(()=>{document.body.classList.remove('paused','celebrating');clearTimeout(celebrationTimer);clearTimeout(particleCleanup);document.getElementById('celebration-layer').replaceChildren();});
-  await display.locator('.avatar[data-motion-toy=globe] .premium-figure').waitFor({state:'attached'});
-  await display.locator('.avatar[data-motion-toy=gifts] .premium-figure').waitFor({state:'attached'});
+  await display.locator('.avatar[data-motion-toy=jump] .premium-figure').waitFor({state:'attached'});
+  await display.locator('.avatar[data-motion-toy=dance] .premium-figure').waitFor({state:'attached'});
+  for(const key of ['bear','jump','dance','candy','gift','cozy','ornaments'])await display.locator('[data-motion-toy='+key+'] .premium-figure').first().waitFor({state:'attached'});
   if(await display.locator('.factory-courier,.courier-track,.scene-train,[data-motion-toy=train],[data-motion-toy=robot],.winter-tree').count()!==0)throw Error('Old flat toys or passing train remain');
   if(await display.locator('.snowflake').count()!==36||await display.locator('.bokeh-light').count()!==24||await display.locator('.constellation-light').count()!==84)throw Error('Background pools are not bounded');
   if(!await display.evaluate(()=>{const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);return ids.length===new Set(ids).size;}))throw Error('Cloned SVG IDs conflict');
@@ -135,14 +136,14 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if((await display.locator('.board-grid').textContent()).includes('NaN'))throw Error('NaN leaked');
   if(await display.locator('.first .name').textContent()!=='Dewi')throw Error('Invalid update replaced valid winner');
   fixture=valid;await display.evaluate(()=>refreshLeaderboard());
-  if(illustrationLoads!==3)throw Error('Artwork was fetched again during point updates: '+illustrationLoads);
+  if(illustrationLoads!==7)throw Error('Artwork was fetched again during point updates: '+illustrationLoads);
   const version=valid.displayVersion;
   await display.evaluate(()=>{document.querySelector('meta[name="display-version"]').content='0000000000000000';setTimeout(refreshLeaderboard,10);});
   await display.waitForURL(url=>url.searchParams.get('v')===version);await display.locator('.first .name').waitFor({state:'visible'});
   if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Version update lost paused state');
   await admin.click('#logout');await admin.locator('#login-panel').waitFor({state:'visible'});
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('PASS: cohesive 3D artwork, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
+  console.log('PASS: all seven Bear.zip originals, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
  }finally{
   if(browser)await browser.close();
   if(server&&server.exitCode===null)await new Promise(resolve=>{server.once('exit',resolve);server.kill();});

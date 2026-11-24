@@ -107,7 +107,7 @@ Server memberi HTML dan API penanda versi yang sama, menambahkan versi pada URL 
 
 Tema **Joy Factory Through The Night** memakai latar navy malam, kartu pemenang ivory/emas, dan angka poin besar. Halaman publik hanya menampilkan informasi leaderboard, indikator koneksi, serta timer ringkas jika diaktifkan. Hero promosi, ticker, tanggal dekoratif dan teks footer sudah dihilangkan. Dekorasi pabrik mainan berada di bawah panel data. Satu peserta ditempatkan di tengah; layout menyesuaikan dua/tiga peserta dan daftar peringkat berikutnya. Pesan tambahan hanya muncul saat data/koneksi bermasalah atau pengumpulan ditutup.
 
-Aset aktif memakai ilustrasi 3D transparan beruang plush, bola kaca, hadiah dan pabrik mainan dengan bahan velvet/navy, ruby, ivory dan emas yang serasi. Mahkota, bintang, ornamen gantung dan detail pabrik memakai SVG orisinal. PNG dibuat dengan generator gambar yang tersedia; SVG ditulis langsung. Semua aset dilayani oleh server aplikasi. Dekorasi dan salju berada di belakang panel data yang solid.
+Aset aktif memakai enam pose beruang dan satu trio ornamen PNG asli dari Bear.zip kiriman pengguna. Podium, pendamping judul, dan sisi pabrik menggunakan pose yang berbeda. Panorama pabrik tetap memakai ilustrasi versi sebelumnya; mahkota, bintang, dan detail arsitektur memakai SVG orisinal. Semua aset dilayani oleh server aplikasi. Dekorasi dan salju berada di belakang panel data yang solid.
 
 Tekan **M** untuk jeda/putar animasi, **R** untuk mengulang sequence pembuka, **F** untuk fullscreen pada browser yang mendukung. Untuk menampilkan tombol operator, tambahkan `?controls=1` atau `?display=screen&controls=1`. Secara default tombol tersembunyi dari layar pelanggan. Jeda animasi tidak menghentikan sinkronisasi poin. Pengaturan reduced motion perangkat tetap didukung.
 
@@ -137,13 +137,13 @@ Aset runtime dilayani langsung oleh server sendiri. Tidak ada ketergantungan lay
 
 Pembuka menampilkan podium secara berurutan, diikuti mahkota dan baris peringkat selama 2,4 detik. Kenaikan poin memberi gerak singkat pada angka terbaru selama 1,4 detik. Pergantian juara memicu penobatan mahkota, sorot cahaya, halo emas, dan lambaian maskot selama 3,4 detik. Sequence juara diprioritaskan bila pembaruan poin lain datang; angka dan peringkat terbaru tetap langsung tampil. Tidak ada angka poin simulasi atau penghitungan dari nol.
 
-Figur 3D beruang, bola kaca dan hadiah bergerak lembut sebagai satu kesatuan, dengan kilau pada bola kaca dan gerak membungkuk singkat saat juara berubah. Kereta yang melintas, robot vektor dan bola salju vektor sudah dihapus. `motion.js` mengunduh setiap PNG sekali per halaman lalu memakai object URL yang sama untuk podium dan figur samping; perubahan poin tidak mengunduh ulang gambar. Pemuatan gagal memakai placeholder dekoratif dan dicoba lagi dengan jeda bertahap, serta saat koneksi pulih. Tidak ada dependency runtime baru.
+Pose beruang melambai, melompat dan menari bergerak lembut sebagai satu kesatuan; trio ornamen berayun dan maskot membungkuk singkat saat juara berubah. Kereta yang melintas, robot vektor dan bola salju vektor sudah dihapus. `motion.js` mengunduh setiap PNG sekali per halaman lalu memakai object URL yang sama untuk podium dan figur samping; perubahan poin tidak mengunduh ulang gambar. Pemuatan gagal memakai placeholder dekoratif dan dicoba lagi dengan jeda bertahap, serta saat koneksi pulih. Tidak ada dependency runtime baru.
 
 Pintasan **R**/tombol **Putar sequence** hanya mengulang pembuka. Jeda **M**, perpindahan tab ke latar, atau perubahan ke reduced motion membatalkan sequence dan membersihkan partikel. Motion latar dijeda saat tab tersembunyi. Pembaruan identik tidak memulai sequence ulang. Semua angka tetap terlihat sejak data diterima, termasuk saat pembuka berjalan.
 
 ### Christmas Bear & Toy Factory
 
-Komposisi memakai beruang plush, bola kaca, serta kado dengan kuda goyang dalam gaya 3D yang serasi dengan pabrik. Tidak ada kereta yang melintas. Panorama utama tetap menampilkan kereta sebagai bagian statis ilustrasi. Dekorasi bawah dibatasi tingginya agar pabrik tidak tertutup peringkat; figur samping disembunyikan pada HP/tablet agar tidak bertumpuk.
+Komposisi memakai ketujuh aset asli Bear.zip: beruang melambai, melompat dan menari pada podium; beruang candy cane dan hadiah di sisi pabrik; beruang santai di samping judul serta layar kosong; dan trio ornamen ruby/navy/ivory di atas. Tidak ada kereta yang melintas. Panorama utama tetap menampilkan kereta sebagai bagian statis ilustrasi. Dekorasi bawah dibatasi tingginya agar pabrik tidak tertutup peringkat; figur samping disembunyikan pada HP/tablet agar tidak bertumpuk.
 
 Latar menggabungkan aurora navy/emas, bokeh bergerak, pita cahaya lengkung, gugusan lampu berbentuk pohon, sorot panggung, salju dan jejak cahaya. Diagram pohon besar digantikan oleh titik cahaya, sedangkan garis pabrik dan roda gigi diperhalus. Kolam elemen tetap berisi 24 bokeh, 84 titik pohon dan 36 salju; detail dikurangi pada HP. Tidak ada loop JavaScript per frame.
 
@@ -152,3 +152,7 @@ Reduced motion menghentikan semua animasi dan menyembunyikan salju, bokeh, jejak
 ### Judul dan warna acara
 
 Judul publik menjadi **Top Spender**, memakai Berkshire Swash yang dilayani dari `assets/fonts/BerkshireSwash-Regular.ttf`. Font berlisensi SIL Open Font License; lisensi disertakan di `assets/fonts/OFL.txt`. Halaman tetap dapat memakai font lokal tanpa mengambil font dari pihak ketiga saat acara berjalan. Warna navy utama adalah `#072768`, dengan panel poin solid dan aksen ivory/emas. Opacity arsitektur rumah latar dinaikkan menjadi 24% pada layar besar dan 16% pada HP.
+
+### Paket aset Bear.zip
+
+Ketujuh PNG kiriman dipakai langsung tanpa perubahan piksel dan diberi nama URL sederhana di `assets/bears`. Manifest mencatat nama asal serta SHA-256; pengujian server memverifikasi file yang disajikan sesuai manifest. Tujuh gambar hanya diunduh sekali per halaman dan dipakai kembali selama pembaruan poin, termasuk salinan maskot di layar kosong. Paket asli sekitar 14 MiB; nama, kode member dan poin tetap muncul sambil aset dimuat. Figur samping disembunyikan pada HP/tablet agar tidak bertumpuk. Font Top Spender, warna utama `#072768`, dan opacity rumah latar dipertahankan.
