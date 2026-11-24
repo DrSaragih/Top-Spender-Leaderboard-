@@ -283,11 +283,15 @@ class ServerTest(unittest.TestCase):
             self.assertEqual(status,200)
             self.assertIn('text/css',headers['Content-Type'])
             self.assertTrue(content)
-        for name in ('joy-robot.svg','joy-train.svg','joy-gift.svg','joy-moon.svg'):
+        for name in ('joy-robot.svg','joy-train.svg','joy-gift.svg','joy-moon.svg','joy-crown.svg','joy-sparkle.svg'):
             status, headers, content = self.fetch_raw('/assets/'+name)
             self.assertEqual(status,200)
             self.assertIn('image/svg+xml',headers['Content-Type'])
             self.assertIn(b'<svg',content)
+        status, headers, content = self.fetch_raw('/assets/joy-factory-parade.png')
+        self.assertEqual(status,200)
+        self.assertIn('image/png',headers['Content-Type'])
+        self.assertTrue(content.startswith(b'\x89PNG\r\n\x1a\n'))
         self.assertEqual(self.fetch_raw('/assets/../server.py')[0],404)
 
     def test_original_database_schema_is_migrated_idempotently(self):

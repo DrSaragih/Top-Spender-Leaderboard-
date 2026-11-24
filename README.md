@@ -107,7 +107,7 @@ Server memberi HTML dan API penanda versi yang sama, menambahkan versi pada URL 
 
 Tema **Joy Factory Through The Night** memakai latar navy malam, kartu pemenang ivory/emas, dan angka poin besar. Halaman publik hanya menampilkan informasi leaderboard, indikator koneksi, serta timer ringkas jika diaktifkan. Hero promosi, ticker, tanggal dekoratif dan footer sudah dihilangkan. Satu peserta ditempatkan di tengah; layout menyesuaikan dua/tiga peserta dan daftar peringkat berikutnya. Pesan tambahan hanya muncul saat data/koneksi bermasalah atau pengumpulan ditutup.
 
-Empat aset SVG orisinal ada di `assets/joy-robot.svg`, `joy-train.svg`, `joy-gift.svg`, dan `joy-moon.svg`. Motion dibuat dengan CSS (robot melayang, kereta hadiah melintas, dan poin berubah dengan pulse singkat). Ornamen berada di belakang panel data. Tidak ada salju yang menutupi teks atau asset/font yang dimuat dari layanan pihak ketiga. Magnific tidak tersedia saat pengerjaan; SVG dibuat langsung untuk aplikasi ini.
+Aset orisinal meliputi SVG robot, kereta, hadiah, bulan, mahkota, bintang, serta ilustrasi PNG transparan `assets/joy-factory-parade.png`. Ilustrasi pabrik mainan dibuat dengan alat gambar yang tersedia; Higgsfield dan Figma belum terhubung sebagai tool pada sesi pengerjaan. Motion CSS menampilkan lampu pesta berpendar, bintang berkilau, mahkota bergerak, robot melayang, dan footer pabrik bergerak halus. Ornamen berada di belakang panel data. Tidak ada salju yang menutupi teks atau asset/font yang dimuat dari layanan pihak ketiga. Magnific tidak tersedia saat pengerjaan; SVG dibuat langsung untuk aplikasi ini.
 
 Tekan **M** untuk jeda/putar animasi, **F** untuk fullscreen pada browser yang mendukung. Untuk menampilkan tombol operator, tambahkan `?controls=1` atau `?display=screen&controls=1`. Secara default tombol tersembunyi dari layar pelanggan. Jeda animasi tidak menghentikan sinkronisasi poin. Pengaturan reduced motion perangkat tetap didukung.
 
@@ -124,3 +124,11 @@ node tests/browser_smoke.cjs
 ```
 
 Runner memakai database sementara dan kata sandi acak, lalu membersihkannya; database acara tidak diisi data demo. Memeriksa input Jewel/Non-jewel, peringkat live, tiga tab admin, timer, kedua CSV, QR, keyboard, validasi poin, pergantian versi, pemulihan koneksi, serta enam viewport hingga 4K. Chromium sistem `/usr/bin/chromium` digunakan bila tersedia; `BROWSER_EXECUTABLE` dan `PYTHON_BIN` bisa dipakai untuk memilih executable. Pada Windows tanpa virtualenv, tetapkan `PYTHON_BIN=python` sebelum menjalankan runner. Screenshot pengujian disimpan di direktori sementara sistem.
+
+## Mode festival Joy Factory
+
+Dekorasi pabrik malam kini lebih meriah: garland lampu merah/emas/mint di atas, mahkota emas di peringkat pertama, bintang kecil di latar, dan ilustrasi 3D pabrik mainan di bawah. Area nama, member code dan poin menggunakan panel solid agar hiasan tidak menutupi data. Tampilan tetap tanpa teks promosi; timer ringkas dipertahankan.
+
+Perayaan partikel berlangsung singkat saat poin bertambah, peserta baru masuk peringkat, atau pemimpin berubah setelah data awal dimuat. Refresh dengan data identik tidak mengulang efek. Pembukaan halaman pertama tidak membuat perayaan palsu. Jumlah partikel dibatasi 16 untuk kenaikan poin dan 28 untuk pergantian pemimpin, lalu dibersihkan otomatis; tidak ada loop partikel terus-menerus. Efek dilewati saat tab tidak terlihat, animasi dijeda (**M**), atau perangkat memilih reduced motion. Poin dan timer tetap tersinkron ketika animasi dijeda. Tidak ada suara.
+
+Aset runtime dilayani langsung oleh server sendiri. Tidak ada ketergantungan layanan Higgsfield/Figma atau layanan gambar pihak ketiga pada saat aplikasi dipakai. SVG mahkota/bintang dapat diimpor ke editor vektor seperti Figma. Detail aset ada di [assets/README.md](assets/README.md).

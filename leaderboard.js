@@ -12,7 +12,10 @@ function scoreNode(value,table=false){
   return node;
 }
 function renderCustomers(next){
+  const previousLeader=customers[0]?.memberCode;
   const previous=new Map(customers.map(c=>[c.memberCode,c.points]));customers=next.slice(0,10);
+  const newLeader=previousLeader&&customers[0]&&customers[0].memberCode!==previousLeader;
+  const pointIncrease=previous.size>0&&customers.some(c=>previous.has(c.memberCode)?c.points>previous.get(c.memberCode):c.points>0);
   $('podium').replaceChildren();$('rankings').replaceChildren();
   document.querySelector('.board-grid').classList.toggle('few',customers.length<=3);
   $('podium').classList.toggle('single',customers.length===1);$('podium').classList.toggle('double',customers.length===2);
@@ -22,7 +25,7 @@ function renderCustomers(next){
     const card=element('article','winner'+(index===0?' first':''));card.dataset.member=customer.memberCode;
     card.setAttribute('aria-label','Peringkat '+(index+1)+', '+customer.firstName+', '+formatPoints(customer.points));
     if(previous.has(customer.memberCode)&&previous.get(customer.memberCode)!==customer.points)card.classList.add('updated');
-    if(index===0){const star=element('span','rank-medal','★');star.setAttribute('aria-hidden','true');card.append(star);}
+    if(index===0){const medal=element('span','rank-medal'),crown=element('img');medal.setAttribute('aria-hidden','true');crown.src='/assets/joy-crown.svg';crown.alt='';crown.width=72;crown.height=65;medal.append(crown);card.append(medal);}
     card.append(element('div','rank',String(index+1).padStart(2,'0')));
     const avatar=element('div','avatar'),image=element('img');image.src='/assets/'+art[index];image.alt='';image.width=100;image.height=100;avatar.append(image);
     card.append(avatar,element('div','name',customer.firstName),element('div','code',customer.memberCode),scoreNode(customer.points));$('podium').append(card);
@@ -32,6 +35,7 @@ function renderCustomers(next){
     for(const text of [String(index+4).padStart(2,'0'),customer.firstName,customer.memberCode])row.append(element('td','',text));
     const cell=element('td');cell.append(scoreNode(customer.points,true));row.append(cell);$('rankings').append(row);
   });
+  if(newLeader||pointIncrease)celebratePoints(Boolean(newLeader));
   $('empty-state').hidden=customers.length>0;document.querySelector('.table-wrap').hidden=customers.length<=3;
 }
 function showHealth(state,text){
@@ -73,6 +77,35 @@ async function refreshLeaderboard(){
     $('last-update').textContent=$('display-alert').textContent;
   }finally{loading=false;}
 }
+let celebrationTimer=null,particleCleanup=null;
+function setupFestival(){
+  const garland=$('festival-garland'),stars=$('festival-stars');
+  for(let i=0;i<22;i++){
+    const bulb=element('i','festival-bulb');bulb.style.setProperty('--x',(2+i*96/21)+'%');
+    bulb.style.setProperty('--drop',(10+Math.sin(i/21*Math.PI*2)**2*18)+'px');bulb.style.setProperty('--delay',(-i*.28)+'s');garland.append(bulb);
+  }
+  for(let i=0;i<14;i++){
+    const star=element('img','festival-star');star.src='/assets/joy-sparkle.svg';star.alt='';
+    star.style.setProperty('--x',((i*29)%98)+'%');star.style.setProperty('--y',((i*43)%95)+'%');
+    star.style.setProperty('--size',(8+i%4*4)+'px');star.style.setProperty('--delay',(-i*.63)+'s');stars.append(star);
+  }
+}
+function celebratePoints(championChanged=false){
+  if(document.body.classList.contains('paused')||matchMedia('(prefers-reduced-motion: reduce)').matches||document.hidden)return;
+  clearTimeout(celebrationTimer);clearTimeout(particleCleanup);
+  document.body.classList.add('celebrating');const layer=$('celebration-layer');layer.replaceChildren();
+  const count=championChanged?28:16;
+  for(let i=0;i<count;i++){
+    const paper=element('i','festival-confetti');
+    paper.style.setProperty('--x',(i%2?91+i%7:2+i%7)+'%');
+    paper.style.setProperty('--delay',(i%7*.05)+'s');paper.style.setProperty('--turn',(i%2?540:-540)+'deg');
+    paper.style.setProperty('--drift',((i%2?-1:1)*(10+i%4*6))+'px');layer.append(paper);
+  }
+  celebrationTimer=setTimeout(()=>document.body.classList.remove('celebrating'),3500);
+  // Cleanup also runs when a user pauses animation halfway through a burst.
+  particleCleanup=setTimeout(()=>layer.replaceChildren(),4200);
+}
+setupFestival();
 const params=new URLSearchParams(location.search);
 if(params.get('display')==='screen')document.body.classList.add('screen-mode');
 if(params.get('motion')==='paused')document.body.classList.add('paused');
