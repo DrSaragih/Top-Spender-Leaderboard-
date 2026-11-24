@@ -64,7 +64,7 @@ $('purchase-form').addEventListener('submit',async event=>{
   saving=true;$('save-purchase').disabled=true;message('save-message','Menyimpan pembelanjaan…');
   try{
     const result=await request('/api/transactions',{...data,id:pending.id});pending=null;sessionStorage.removeItem('toy-pending');
-    message('save-message',`${rupiah(data.amount)} untuk ${data.firstName} (${data.memberCode}) tersimpan. Struk ini: ${result.transactionPoints} poin${result.eligible?'':' (di bawah minimum Rp500.000)'}. Total member: ${result.memberPoints} poin. Leaderboard diperbarui otomatis.`);
+    message('save-message',`${data.firstName} (${data.memberCode}) tersimpan. +${result.transactionPoints} poin · Total ${result.memberPoints} poin${result.eligible?'':'. Struk di bawah minimum Rp500.000'}.`);
     $('purchase-form').reset();updatePurchaseType();await history();$('first-name').focus();
   }catch(error){if(error.status===400||error.status===409||error.status===423){pending=null;sessionStorage.removeItem('toy-pending');}message('save-message',`${error.message} Data tetap di formulir; Anda dapat mencoba menyimpan kembali.`,true);}
   finally{saving=false;$('save-purchase').disabled=false;}
@@ -132,7 +132,7 @@ for(const button of document.querySelectorAll('[data-export]')){
 async function loadShare(){
   try{
     const data=await request('/api/share');$('share-ready').hidden=!data.publicUrl;
-    if(!data.publicUrl){message('share-message','Alamat publik belum tersedia. Deploy ke Render atau tetapkan PUBLIC_URL dengan alamat HTTPS hosting. QR akan muncul setelah alamat publik tersedia.');return;}
+    if(!data.publicUrl){message('share-message','Alamat publik belum tersedia. Tetapkan PUBLIC_URL dengan alamat HTTPS hosting. QR akan muncul setelah alamat publik tersedia.');return;}
     $('public-url').value=data.publicUrl;$('screen-link').href=data.screenUrl;$('public-qr').src='/api/share/qr.svg';
     message('share-message','QR mengarah ke leaderboard publik, bukan halaman admin. Uji scan dari HP sebelum dicetak.');
   }catch(error){message('share-message',error.message,true);}
@@ -167,3 +167,21 @@ async function loadLegacy(){
     }
   }catch(error){message('history-message','Transaksi lama belum dapat diperiksa: '+error.message,true);}
 }
+
+function openAdminTab(key,focus=false){
+  for(const tab of document.querySelectorAll('[data-tab]')){
+    const active=tab.dataset.tab===key;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;
+    if(active&&focus)tab.focus();
+  }
+  for(const panel of document.querySelectorAll('[data-tab-panel]'))panel.hidden=panel.dataset.tabPanel!==key;
+}
+const adminTabs=[...document.querySelectorAll('[data-tab]')];
+adminTabs.forEach((tab,index)=>{
+  tab.addEventListener('click',()=>openAdminTab(tab.dataset.tab));
+  tab.addEventListener('keydown',event=>{
+    let target;if(event.key==='ArrowRight')target=(index+1)%adminTabs.length;
+    else if(event.key==='ArrowLeft')target=(index+adminTabs.length-1)%adminTabs.length;
+    else if(event.key==='Home')target=0;else if(event.key==='End')target=adminTabs.length-1;
+    if(target!==undefined){event.preventDefault();openAdminTab(adminTabs[target].dataset.tab,true);}
+  });
+});

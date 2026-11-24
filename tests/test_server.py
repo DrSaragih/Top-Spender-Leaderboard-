@@ -277,6 +277,19 @@ class ServerTest(unittest.TestCase):
         self.assertNotIn(b'const rupiah',html)
         self.assertEqual(self.call('/api/leaderboard')[1]['displayVersion'],app.DISPLAY_VERSION)
 
+    def test_theme_styles_and_original_assets_are_served(self):
+        for name in ('leaderboard.css','admin.css'):
+            status, headers, content = self.fetch_raw('/'+name)
+            self.assertEqual(status,200)
+            self.assertIn('text/css',headers['Content-Type'])
+            self.assertTrue(content)
+        for name in ('joy-robot.svg','joy-train.svg','joy-gift.svg','joy-moon.svg'):
+            status, headers, content = self.fetch_raw('/assets/'+name)
+            self.assertEqual(status,200)
+            self.assertIn('image/svg+xml',headers['Content-Type'])
+            self.assertIn(b'<svg',content)
+        self.assertEqual(self.fetch_raw('/assets/../server.py')[0],404)
+
     def test_original_database_schema_is_migrated_idempotently(self):
         legacy=Path(self.temp.name)/('legacy-'+str(uuid.uuid4())+'.sqlite3')
         with patch.object(app,'DB',legacy):

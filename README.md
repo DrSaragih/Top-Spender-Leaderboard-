@@ -1,4 +1,4 @@
-# Christmas Toy Factory · Midnight Sale
+# Joy Factory Through The Night · Leaderboard
 
 Leaderboard poin untuk 12 Desember 2026 dengan halaman admin, penyimpanan SQLite, dan sinkronisasi publik setiap 3 detik. Tidak ada data pelanggan contoh yang dimasukkan ke database.
 
@@ -89,7 +89,7 @@ Struk di bawah minimum tetap dicatat untuk arsip, tetapi mendapat **0 poin**. Du
 
 Backup database terlebih dahulu, hentikan proses, jalankan `git pull origin main`, instal dependency dengan `python -m pip install -r requirements.txt`, lalu mulai lagi `python server.py`. Startup menambah kolom kategori tanpa menghapus atau menebak kategori transaksi lama. Muat ulang tab admin dan semua layar leaderboard setelah update.
 
-Bagian admin **Kategorikan transaksi lama** menampilkan 100 struk belum berkategori per batch. Cocokkan nama, member code, nominal, dan waktu dengan struk asli, lalu pilih kategori. Batch berikutnya muncul otomatis. Penetapan kategori tetap dapat dilakukan setelah timer ditutup karena hanya memperbarui metadata transaksi yang sudah tercatat. Kategori yang sudah ditetapkan tidak bisa diganti melalui UI ini. Struk di bawah minimum tetap 0 poin. Transaksi belum berkategori tidak dihitung menjadi poin dan ditandai dalam ekspor; selesaikan pemeriksaan sebelum acara.
+Bagian **Periksa transaksi lama** pada tab **Input struk** menampilkan 100 struk belum berkategori per batch. Cocokkan nama, member code, nominal, dan waktu dengan struk asli, lalu pilih kategori. Batch berikutnya muncul otomatis. Penetapan kategori tetap dapat dilakukan setelah timer ditutup karena hanya memperbarui metadata transaksi yang sudah tercatat. Kategori yang sudah ditetapkan tidak bisa diganti melalui UI ini. Struk di bawah minimum tetap 0 poin. Transaksi belum berkategori tidak dihitung menjadi poin dan ditandai dalam ekspor; selesaikan pemeriksaan sebelum acara.
 
 Versi ini tetap menggunakan Python/SQLite. Migrasi Vercel/Firebase belum dilakukan.
 
@@ -105,4 +105,22 @@ Podium dan tabel publik menampilkan poin (contoh `10 poin`), tanpa memformat sko
 
 Server memberi HTML dan API penanda versi yang sama, menambahkan versi pada URL script, dan menonaktifkan cache file statis. Tab yang sudah memakai mekanisme versi ini akan memuat ulang otomatis bila server menjalankan versi tampilan baru, dengan mode videotron dan jeda animasi dipertahankan. Setelah update dari versi lama yang masih menampilkan `RpNaN`, tetap perlu hentikan server, `git pull origin main`, jalankan `python server.py`, lalu **Ctrl+F5 sekali** di semua layar. Tab versi lama belum memiliki mekanisme pembaruan tersebut.
 
-Tema Christmas menampilkan skor poin, pita permen, kartu podium dengan aksen emas, mainan animasi dan salju. Satu peserta ditempatkan di tengah; layout menyesuaikan dua/tiga peserta dan daftar peringkat berikutnya. Jeda animasi tidak menghentikan sinkronisasi poin atau membuat kartu yang baru diperbarui menghilang. Pengaturan reduced motion tetap didukung.
+Tema **Joy Factory Through The Night** memakai latar navy malam, kartu pemenang ivory/emas, dan angka poin besar. Halaman publik hanya menampilkan informasi leaderboard, indikator koneksi, serta timer ringkas jika diaktifkan. Hero promosi, ticker, tanggal dekoratif dan footer sudah dihilangkan. Satu peserta ditempatkan di tengah; layout menyesuaikan dua/tiga peserta dan daftar peringkat berikutnya. Pesan tambahan hanya muncul saat data/koneksi bermasalah atau pengumpulan ditutup.
+
+Empat aset SVG orisinal ada di `assets/joy-robot.svg`, `joy-train.svg`, `joy-gift.svg`, dan `joy-moon.svg`. Motion dibuat dengan CSS (robot melayang, kereta hadiah melintas, dan poin berubah dengan pulse singkat). Ornamen berada di belakang panel data. Tidak ada salju yang menutupi teks atau asset/font yang dimuat dari layanan pihak ketiga. Magnific tidak tersedia saat pengerjaan; SVG dibuat langsung untuk aplikasi ini.
+
+Tekan **M** untuk jeda/putar animasi, **F** untuk fullscreen pada browser yang mendukung. Untuk menampilkan tombol operator, tambahkan `?controls=1` atau `?display=screen&controls=1`. Secara default tombol tersembunyi dari layar pelanggan. Jeda animasi tidak menghentikan sinkronisasi poin. Pengaturan reduced motion perangkat tetap didukung.
+
+Admin sekarang dibagi menjadi tiga tab: **Input struk**, **Kontrol acara**, dan **Unduh & QR**. Default adalah Input struk; pilihan Jewel/Non-jewel, pratinjau poin, serta riwayat tetap tersedia. Data dan aturan poin tidak berubah. Periksa transaksi lama dapat dibuka dari panel lipat pada tab input.
+
+## Pengujian browser opsional
+
+Runtime produksi hanya memerlukan Python dan `requirements.txt`. Untuk pengujian UI saja, gunakan Node.js dan Playwright:
+
+```sh
+npm install --no-save --package-lock=false playwright
+npx playwright install chromium
+node tests/browser_smoke.cjs
+```
+
+Runner memakai database sementara dan kata sandi acak, lalu membersihkannya; database acara tidak diisi data demo. Memeriksa input Jewel/Non-jewel, peringkat live, tiga tab admin, timer, kedua CSV, QR, keyboard, validasi poin, pergantian versi, pemulihan koneksi, serta enam viewport hingga 4K. Chromium sistem `/usr/bin/chromium` digunakan bila tersedia; `BROWSER_EXECUTABLE` dan `PYTHON_BIN` bisa dipakai untuk memilih executable. Pada Windows tanpa virtualenv, tetapkan `PYTHON_BIN=python` sebelum menjalankan runner. Screenshot pengujian disimpan di direktori sementara sistem.

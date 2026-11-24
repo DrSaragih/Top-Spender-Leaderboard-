@@ -19,7 +19,9 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('DATABASE_PATH', ROOT / '.data' / 'leaderboard.sqlite3'))
-DISPLAY_VERSION = hashlib.sha256((ROOT / 'index.html').read_bytes() + (ROOT / 'leaderboard.js').read_bytes()).hexdigest()[:16]
+DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'assets/joy-robot.svg',
+                 'assets/joy-train.svg', 'assets/joy-gift.svg', 'assets/joy-moon.svg')
+DISPLAY_VERSION = hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in DISPLAY_FILES)).hexdigest()[:16]
 CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
               'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
 MIN_RECEIPT = 500_000
@@ -257,9 +259,11 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200, {'transactions': [{**dict(row), 'points': receipt_points(row['amount'], row['category'])} for row in rows]})
         # Explicit allowlist prevents exposing SQLite, source, or credentials.
         files = {'/': 'index.html', '/index.html': 'index.html', '/admin': 'admin.html',
-                 '/admin.html': 'admin.html', '/admin.js': 'admin.js', '/leaderboard.js': 'leaderboard.js'}
+                 '/admin.html': 'admin.html', '/admin.js': 'admin.js', '/leaderboard.js': 'leaderboard.js',
+                 '/leaderboard.css': 'leaderboard.css', '/admin.css': 'admin.css'}
         if route.startswith('/assets/') and route.removeprefix('/assets/') in {
-            'teddy-bear.svg', 'rocking-horse.svg', 'toy-blocks.svg'}:
+            'teddy-bear.svg', 'rocking-horse.svg', 'toy-blocks.svg',
+            'joy-robot.svg', 'joy-train.svg', 'joy-gift.svg', 'joy-moon.svg'}:
             files[route] = route.lstrip('/')
         if route not in files:
             return self.reply(404, {'error': 'Halaman tidak ditemukan.'})
@@ -267,7 +271,7 @@ class Handler(BaseHTTPRequestHandler):
         body = file.read_bytes()
         if files[route] == 'index.html':
             body = body.replace(b'__DISPLAY_VERSION__', DISPLAY_VERSION.encode())
-        mime = {'html': 'text/html', 'js': 'text/javascript', 'svg': 'image/svg+xml'}[file.suffix[1:]]
+        mime = {'html': 'text/html', 'js': 'text/javascript', 'svg': 'image/svg+xml', 'css': 'text/css'}[file.suffix[1:]]
         self.send_response(200)
         self.send_header('Content-Type', mime + '; charset=utf-8')
         self.send_header('Cache-Control', 'no-store, max-age=0')
