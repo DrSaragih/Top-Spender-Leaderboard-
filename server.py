@@ -24,7 +24,8 @@ DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'christmas.c
                  'assets/joy-crown.svg', 'assets/joy-sparkle.svg', 'assets/joy-factory-parade.png',
                  'assets/joy-bear.svg', 'assets/joy-tree.svg', 'assets/joy-bauble.svg',
                  'assets/joy-snowglobe.svg', 'assets/joy-clockwork.svg', 'assets/joy-workshop.svg',
-                 'assets/joy-bear-factory.png')
+                 'assets/joy-bear-factory.png', 'assets/joy-plush-bear.png',
+                 'assets/joy-crystal-globe.png', 'assets/joy-couture-gifts.png')
 DISPLAY_VERSION = hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in DISPLAY_FILES)).hexdigest()[:16]
 CATEGORIES = {'fnb': ('F&B', 50_000), 'fashion': ('Fashion', 50_000),
               'electronics': ('Elektronik', 500_000), 'jewelry': ('Perhiasan', 500_000)}
@@ -271,7 +272,8 @@ class Handler(BaseHTTPRequestHandler):
             'joy-robot.svg', 'joy-train.svg', 'joy-gift.svg', 'joy-moon.svg',
             'joy-crown.svg', 'joy-sparkle.svg', 'joy-factory-parade.png',
             'joy-bear.svg', 'joy-tree.svg', 'joy-bauble.svg', 'joy-snowglobe.svg',
-            'joy-clockwork.svg', 'joy-workshop.svg', 'joy-bear-factory.png'}:
+            'joy-clockwork.svg', 'joy-workshop.svg', 'joy-bear-factory.png',
+            'joy-plush-bear.png', 'joy-crystal-globe.png', 'joy-couture-gifts.png'}:
             files[route] = route.lstrip('/')
         if route not in files:
             return self.reply(404, {'error': 'Halaman tidak ditemukan.'})

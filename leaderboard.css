@@ -46,39 +46,17 @@
 @media(min-width:2600px){.joy-stage{padding-top:150px;padding-bottom:390px}.festival-footer{height:650px}.festival-bulb{width:14px;height:23px}.festival-garland{height:90px}.rank-medal{width:95px;height:86px;top:-45px}.festival-star{filter:drop-shadow(0 0 12px #f8d78c66)}}
 @media(prefers-reduced-motion:reduce){.festival-confetti{display:none}*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
 
-/* Articulated toy parts share the document motion controls. */
-.avatar .articulated-toy,.factory-courier .articulated-toy{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
-.first .articulated-toy{animation:mascot-hover 5s ease-in-out infinite}
-.robot-wave{transform-box:fill-box;transform-origin:10% 90%;animation:robot-greeting 5.8s ease-in-out infinite}
-.robot-eyes{transform-box:fill-box;transform-origin:center;animation:robot-blink 6.2s ease-in-out infinite}
-.robot-beacon{animation:beacon-glow 3.8s ease-in-out infinite}.robot-heart{transform-box:fill-box;transform-origin:center;animation:heart-mechanism 4s ease-in-out infinite}
-.train-wheel{transform-box:fill-box;transform-origin:center;animation:wheel-roll 2s linear infinite}
-.train-rod{animation:coupling-rod 1s linear infinite}.train-steam{transform-box:fill-box;transform-origin:center;animation:steam-release 2.5s ease-out infinite}.train-steam-two{animation-delay:-1.25s}
-.gift-lid{transform-box:view-box;transform-origin:75px 78px;animation:gift-surprise 7s ease-in-out infinite}.gift-star{animation:beacon-glow 3.3s ease-in-out infinite}
-.courier-track{position:absolute;left:0;right:0;bottom:0;height:clamp(55px,8vw,125px);overflow:hidden;pointer-events:none}.factory-courier{position:absolute;bottom:1px;left:0;width:clamp(130px,15vw,240px);height:100%;filter:drop-shadow(0 5px 6px #0003);animation:courier-delivery 24s linear infinite;opacity:.85}
+/* Public presentation sequences. */
 .motion-beams{position:absolute;inset:0;overflow:hidden;pointer-events:none}.motion-beams i{position:absolute;bottom:-30%;left:10%;height:155%;width:25%;background:linear-gradient(0deg,#f5d39713,transparent 85%);clip-path:polygon(47% 100%,53% 100%,100% 0,0 0);transform-origin:50% 100%;animation:ambient-spotlight 26s ease-in-out infinite;filter:blur(10px)}.motion-beams i:nth-child(2){left:65%;background:linear-gradient(0deg,#a0dcc814,transparent 85%);animation-delay:-13s}
 body[data-sequence=intro] .winner{animation:podium-intro .85s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--entry-order,0)*.15s)}
 body[data-sequence=intro] tbody tr{animation:row-intro .65s ease-out both;animation-delay:calc(.35s + var(--row-order,0)*.06s)}
 body[data-sequence=intro] .rank-medal img{animation:crown-coronation 1.25s .25s cubic-bezier(.2,.8,.2,1) both}
 body[data-sequence=points] .updated .score-value,body[data-sequence=points] tr.updated .table-score{display:inline-block;animation:score-ticket .7s cubic-bezier(.2,.8,.2,1) both}
-body[data-sequence=points] .updated .robot-wave{animation:robot-applause 1.4s ease-in-out}
 body[data-sequence=champion] .winner.first{animation:champion-podium 3.4s ease-out}
 body[data-sequence=champion] .rank-medal img{animation:crown-coronation 1.35s cubic-bezier(.2,.8,.2,1) both}
-body[data-sequence=champion] .first .robot-wave{animation:robot-applause 1.4s ease-in-out 2}
 body[data-sequence=champion] .motion-beams i{animation:award-spotlight 3.4s ease-in-out both;filter:blur(6px);background:linear-gradient(0deg,#f5d39730,transparent 90%)}
 body[data-sequence=champion] .motion-beams i:nth-child(2){animation-direction:reverse}
 body.motion-hidden *,body.motion-hidden *:after{animation-play-state:paused!important}
-@keyframes mascot-hover{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 -5px;rotate:2deg}}
-@keyframes robot-greeting{0%,45%,100%{rotate:0deg}55%{rotate:20deg}63%{rotate:-12deg}71%{rotate:18deg}79%{rotate:-8deg}87%{rotate:0deg}}
-@keyframes robot-applause{0%,100%{rotate:0deg}20%,60%{rotate:25deg}40%,80%{rotate:-15deg}}
-@keyframes robot-blink{0%,40%,45%,100%{scale:1 1}42%{scale:1 .14}}
-@keyframes beacon-glow{0%,100%{opacity:.65}50%{opacity:1;filter:drop-shadow(0 0 3px #f3cf87aa)}}
-@keyframes heart-mechanism{0%,100%{scale:1;rotate:0deg}50%{scale:1.06;rotate:7deg}}
-@keyframes wheel-roll{to{rotate:360deg}}
-@keyframes coupling-rod{0%,100%{translate:0 0}25%{translate:0 -1.5px}75%{translate:0 1.5px}}
-@keyframes steam-release{0%{translate:0 4px;scale:.6;opacity:0}20%{opacity:.6}100%{translate:7px -14px;scale:1.4;opacity:0}}
-@keyframes gift-surprise{0%,45%,85%,100%{rotate:0deg;translate:0 0}52%,66%{rotate:-10deg;translate:0 -11px}59%,73%{rotate:6deg;translate:0 -5px}}
-@keyframes courier-delivery{from{transform:translateX(-280px)}to{transform:translateX(calc(100vw + 280px))}}
 @keyframes ambient-spotlight{0%,100%{rotate:-20deg;opacity:.45}50%{rotate:20deg;opacity:.8}}
 @keyframes award-spotlight{0%{rotate:-28deg;opacity:.2}40%{rotate:17deg;opacity:1}100%{rotate:0deg;opacity:.35}}
 @keyframes podium-intro{from{translate:0 12px;scale:.985}to{translate:0 0;scale:1}}
@@ -86,6 +64,5 @@ body.motion-hidden *,body.motion-hidden *:after{animation-play-state:paused!impo
 @keyframes crown-coronation{0%{translate:0 -15px;rotate:-18deg;scale:.8}55%{translate:0 3px;rotate:7deg;scale:1.08}80%{translate:0 -2px;rotate:-3deg;scale:.98}100%{translate:0 0;rotate:0deg;scale:1}}
 @keyframes score-ticket{0%{translate:0 -5px;scale:1.04}50%{translate:0 2px;scale:1.02}100%{translate:0 0;scale:1}}
 @keyframes champion-podium{0%,100%{box-shadow:0 18px 65px #e5b86c22}22%{box-shadow:0 0 0 4px #ffe6a266,0 0 80px #e6c27855}65%{box-shadow:0 0 0 2px #ffe6a244,0 0 45px #e6c27833}}
-@media(min-width:2600px){.courier-track{height:190px}.factory-courier{width:340px}}
-@media(max-width:600px){.motion-beams i{width:40%;opacity:.4}.courier-track{height:55px}.factory-courier{width:130px}}
+@media(max-width:600px){.motion-beams i{width:40%;opacity:.4}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}

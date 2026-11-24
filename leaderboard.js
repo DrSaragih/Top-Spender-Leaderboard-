@@ -97,6 +97,17 @@ function setupFestival(){
     flake.style.setProperty('--duration',(17+i%7*3)+'s');flake.style.setProperty('--delay',(-i*2.9)+'s');
     flake.style.setProperty('--drift',((i%2?1:-1)*(20+i%5*13))+'px');snow.append(flake);
   }
+  for(let i=0;i<24;i++){
+    const glow=element('i','bokeh-light');glow.style.setProperty('--x',((i*43+7)%100)+'%');glow.style.setProperty('--y',((i*31+13)%100)+'%');
+    glow.style.setProperty('--size',(12+i%5*11)+'px');glow.style.setProperty('--delay',(-i*1.7)+'s');glow.style.setProperty('--duration',(16+i%5*3)+'s');$('golden-bokeh').append(glow);
+  }
+  for(const tree of document.querySelectorAll('.constellation-tree')){
+    for(let i=0;i<42;i++){
+      const light=element('i','constellation-light'),height=(i+1)/42;
+      light.style.setProperty('--x',(50+Math.sin(i*2.4)*height*46)+'%');light.style.setProperty('--y',(5+height*85)+'%');
+      light.style.setProperty('--size',(2+i%3)+'px');light.style.setProperty('--delay',(-i*.37)+'s');tree.append(light);
+    }
+  }
 }
 function celebratePoints(championChanged=false){
   if(document.body.classList.contains('paused')||matchMedia('(prefers-reduced-motion: reduce)').matches||document.hidden)return;

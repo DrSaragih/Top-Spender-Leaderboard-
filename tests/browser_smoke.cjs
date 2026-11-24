@@ -15,7 +15,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   browser=await chromium.launch({executablePath,headless:true});
   const context=await browser.newContext({acceptDownloads:true});
   const errors=[];context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
-  const display=await context.newPage();await display.goto(base+'/?display=screen');await display.locator('#empty-state').waitFor({state:'visible'});
+  const display=await context.newPage();let illustrationLoads=0;display.on('request',request=>{if(/\/assets\/joy-(plush-bear|crystal-globe|couture-gifts)\.png/.test(request.url()))illustrationLoads++;});await display.goto(base+'/?display=screen');await display.locator('#empty-state').waitFor({state:'visible'});
   if(await display.locator('h1').textContent()!=='LEADERBOARD')throw Error('Public title');
   if(await display.locator('button:visible').count()!==0)throw Error('Customer-facing controls not hidden');
   if(await display.locator('.hero,.ticker,footer').count()!==0)throw Error('Promotional copy remains');
@@ -30,7 +30,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   }
   await purchase('Nadia','TF-001',750000,'jewelry');await display.locator('.first .amount').filter({hasText:'1 poin'}).waitFor({timeout:6000});
   await display.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth>0));
-  await display.locator('.first .bear-paw').waitFor({state:'attached'});
+  await display.locator('.first .premium-figure').waitFor({state:'attached'});
   if(await display.locator('.festival-confetti').count()!==0)throw Error('Opening fabricated a score celebration');
   await display.setViewportSize({width:1920,height:1080});await display.screenshot({path:path.join(os.tmpdir(),'joy-single.png'),fullPage:true});
   await purchase('Bima','TF-002',500000,'fnb');await display.locator('.first .name').filter({hasText:'Bima'}).waitFor({timeout:6000});
@@ -56,6 +56,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
     const a=await admin.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
     const d=await display.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,clipped:[...document.querySelectorAll('.amount,.code')].some(e=>e.scrollWidth>e.clientWidth+1)}));
     if(a||d.overflow||d.clipped)throw Error('Responsive layout failed '+width+' '+JSON.stringify({a,d}));
+    if(await display.evaluate(()=>document.querySelector('.festival-footer').getBoundingClientRect().top<document.querySelector('.board-grid').getBoundingClientRect().bottom-1))throw Error('Factory scenery overlaps rankings '+width);
     if(width===1920||width===1280){if(await display.evaluate(()=>document.documentElement.scrollHeight>innerHeight))throw Error('Signage needs scrolling '+width);}
     console.log('PASS viewport',width,height);
   }
@@ -71,19 +72,17 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.route('**/api/leaderboard',route=>route.fulfill({json:fixture}));
   await display.bringToFront();await display.emulateMedia({reducedMotion:'no-preference'});
   await display.evaluate(()=>{document.body.classList.remove('paused','celebrating');clearTimeout(celebrationTimer);clearTimeout(particleCleanup);document.getElementById('celebration-layer').replaceChildren();});
-  await display.locator('.avatar .train-wheel').first().waitFor({state:'attached'});
-  await display.locator('.avatar .gift-lid').waitFor({state:'attached'});
-  await display.locator('.factory-courier .train-wheel').first().waitFor({state:'attached'});
-  await display.locator('.tree-left .tree-lights').first().waitFor({state:'attached'});
-  await display.locator('.tree-right .tree-lights').first().waitFor({state:'attached'});
-  await display.locator('.workshop-globe .globe-bear').waitFor({state:'attached'});
-  if(await display.locator('.snowflake').count()!==36)throw Error('Snow particle pool is not bounded');
+  await display.locator('.avatar[data-motion-toy=globe] .premium-figure').waitFor({state:'attached'});
+  await display.locator('.avatar[data-motion-toy=gifts] .premium-figure').waitFor({state:'attached'});
+  if(await display.locator('.factory-courier,.courier-track,.scene-train,[data-motion-toy=train],[data-motion-toy=robot],.winter-tree').count()!==0)throw Error('Old flat toys or passing train remain');
+  if(await display.locator('.snowflake').count()!==36||await display.locator('.bokeh-light').count()!==24||await display.locator('.constellation-light').count()!==84)throw Error('Background pools are not bounded');
   if(!await display.evaluate(()=>{const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);return ids.length===new Set(ids).size;}))throw Error('Cloned SVG IDs conflict');
   const snowBefore=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
-  const wheelBefore=await display.locator('.avatar .train-wheel').first().evaluate(e=>getComputedStyle(e).rotate);
+  const sculptureBefore=await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).transform);
+  const bokehBefore=await display.locator('.bokeh-light').first().evaluate(e=>getComputedStyle(e).translate);
   await display.waitForTimeout(150);
-  const wheelAfter=await display.locator('.avatar .train-wheel').first().evaluate(e=>getComputedStyle(e).rotate);
-  if(wheelBefore===wheelAfter)throw Error('Wheel is not actually moving');
+  if(sculptureBefore===await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).transform))throw Error('Plush sculpture is not moving');
+  if(bokehBefore===await display.locator('.bokeh-light').first().evaluate(e=>getComputedStyle(e).translate))throw Error('Bokeh is not moving');
   if(snowBefore===await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Snow is not moving');
   const pointsBeforeReplay=await display.locator('.first .amount').textContent();
   await display.keyboard.press('r');
@@ -124,7 +123,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if(await display.locator('body').getAttribute('data-sequence'))throw Error('Replay ignored pause');
   await display.emulateMedia({reducedMotion:'reduce'});
   if(await display.locator('#winter-snow').isVisible())throw Error('Reduced motion left snow visible');
-  if(await display.locator('.first .bear-paw').evaluate(e=>getComputedStyle(e).animationName)!=='none')throw Error('Reduced motion left bear moving');
+  if(await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).animationName)!=='none')throw Error('Reduced motion left bear moving');
   await display.emulateMedia({reducedMotion:'no-preference'});
 
   await display.evaluate(()=>{document.body.classList.add('paused');document.getElementById('celebration-layer').replaceChildren();});
@@ -135,13 +134,14 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if((await display.locator('.board-grid').textContent()).includes('NaN'))throw Error('NaN leaked');
   if(await display.locator('.first .name').textContent()!=='Dewi')throw Error('Invalid update replaced valid winner');
   fixture=valid;await display.evaluate(()=>refreshLeaderboard());
+  if(illustrationLoads!==3)throw Error('Artwork was fetched again during point updates: '+illustrationLoads);
   const version=valid.displayVersion;
   await display.evaluate(()=>{document.querySelector('meta[name="display-version"]').content='0000000000000000';setTimeout(refreshLeaderboard,10);});
   await display.waitForURL(url=>url.searchParams.get('v')===version);await display.locator('.first .name').waitFor({state:'visible'});
   if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Version update lost paused state');
   await admin.click('#logout');await admin.locator('#login-panel').waitFor({state:'visible'});
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('PASS: Christmas scenery, bounded moving snow, unique SVG IDs, bear motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
+  console.log('PASS: cohesive 3D artwork, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
  }finally{
   if(browser)await browser.close();
   if(server&&server.exitCode===null)await new Promise(resolve=>{server.once('exit',resolve);server.kill();});

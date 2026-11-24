@@ -1,26 +1,26 @@
 # Aset Joy Factory Through The Night
 
-- `joy-bear-factory.png`: ilustrasi baru pabrik beruang Natal mewah, 2172 × 724 px, PNG transparan sekitar 2,2 MB. Beruang plush, workshop navy/emas, conveyor hadiah, pohon Natal, toy soldiers, dan kereta ruby. Dibuat dengan generator gambar sesi ini; disalin dari file asli tanpa perubahan piksel. Menjadi ilustrasi footer aktif; dimuat satu kali dari server aplikasi.
-- `joy-bear.svg`: maskot podium beruang dengan topi Santa, rompi navy, bulu bergradasi, tangan melambai, mata berkedip, dan kepala bergerak.
-- `joy-tree.svg`: pohon zamrud dengan ornamen ruby/emas, dua rangkaian lampu bergantian, bintang bercahaya, serta hadiah.
-- `joy-bauble.svg`: ornamen gantung dengan pernis ruby, pita emas, dan pantulan cahaya bergerak.
-- `joy-snowglobe.svg`: bola salju kaca dengan anak beruang bergoyang dan salju di dalamnya.
-- `joy-clockwork.svg`: roda gigi kuningan dua belas gigi untuk mesin pabrik di latar.
-- `joy-workshop.svg`: panorama arsitektur pabrik dengan 18 jendela bercahaya dan uap cerobong.
-- `joy-factory-parade.png`: ilustrasi pabrik mainan versi sebelumnya, 2172 × 724 px, PNG transparan, sekitar 900 KB. File dipertahankan sebagai aset lama; halaman aktif memakai `joy-bear-factory.png`.
-- `joy-crown.svg`: mahkota vektor emas dengan aksen merah dan mint untuk pemimpin leaderboard.
-- `joy-sparkle.svg`: bintang empat sudut untuk dekorasi latar yang ringan.
-- `joy-robot.svg`: robot orisinal dengan grup tangan, mata, antena, dan mekanisme dada yang dapat dianimasikan terpisah.
-- `joy-train.svg`: kereta orisinal dengan empat grup roda, batang penghubung, dan dua kepulan uap. Dipakai pada podium dan jalur pengiriman di bawah layar.
-- `joy-gift.svg`: hadiah orisinal dengan tutup/pita bergerak dan bintang berpendar.
-- `joy-moon.svg`: bulan dan bintang untuk latar malam.
+## Aset yang tampil
 
-Higgsfield dan Figma tidak tersedia sebagai tool pada sesi ini. Ilustrasi dibuat dengan alat gambar yang tersedia, SVG ditulis langsung, dan motion dibuat dengan CSS/JavaScript aplikasi. Format sumber yang disediakan adalah PNG dan SVG. SVG dapat diimpor ke Figma untuk penyuntingan manual.
+- `joy-plush-bear.png`: beruang Santa plush dengan rompi navy, pita ruby, dan hadiah emas; 1312 × 1199 px, PNG transparan sekitar 2,4 MiB. Menggantikan maskot vektor di podium pertama dan robot di sisi pabrik.
+- `joy-crystal-globe.png`: bola kaca berisi beruang dan pohon emas, alas navy/emas serta pita velvet; 1254 × 1254 px, PNG transparan sekitar 1,9 MiB. Dipakai pada podium kedua dan sisi kanan pabrik.
+- `joy-couture-gifts.png`: kado velvet/navy, ivory dan emas dengan mainan kuda goyang; 1312 × 1199 px, PNG transparan sekitar 1,9 MiB. Dipakai pada podium ketiga dan keadaan belum ada poin.
+- `joy-bear-factory.png`: panorama pabrik beruang, conveyor hadiah, pohon Natal, toy soldiers dan kereta; 2172 × 724 px, PNG transparan. Kereta di dalam ilustrasi ini merupakan bagian statis panorama. Tidak ada kereta yang bergerak melintasi layar.
+- `joy-crown.svg`, `joy-sparkle.svg`: mahkota podium dan bintang dekoratif.
+- `joy-bauble.svg`, `joy-clockwork.svg`, `joy-workshop.svg`: ornamen gantung, roda gigi serta arsitektur latar yang samar.
 
-`motion.js` memuat SVG mainan dan latar sebagai elemen inline agar animasi bagian aset mengikuti kontrol halaman. ID gradient dan clip diberi awalan unik untuk setiap salinan agar dua pohon/ornamen tidak saling mengubah warna atau pemotongan. Bila pemuatan SVG gagal, gambar statis tetap ditampilkan dan pemuatan dicoba lagi saat koneksi pulih. Sumber hanya dari server aplikasi sendiri.
+PNG dibuat dengan generator gambar yang tersedia pada sesi ini. File asli disimpan di `/workspace/generated_images` dan disalin tanpa crop atau perubahan piksel. SVG ditulis langsung. Tidak ada integrasi runtime dengan layanan gambar atau editor desain pihak ketiga.
 
-Motion memakai CSS: robot melambaikan tangan dan berkedip, roda kereta berputar dengan uap, serta tutup hadiah terbuka. Sequence pembuka berlangsung 2,4 detik, kenaikan poin 1,4 detik, dan pergantian juara 3,4 detik. Pintasan R atau tombol operator memutar ulang pembuka. Poin terbaru selalu langsung tampil selama sequence berjalan.
+## Motion dan penyajian
 
-Pergerakan lampu, bintang, mahkota, avatar, dan ilustrasi footer mengikuti tombol jeda/pintasan M serta prefers-reduced-motion. Tab tersembunyi menjeda motion dan membatalkan sequence/partikel sementara. Partikel perayaan hanya menanggapi perubahan data nyata dan dibersihkan otomatis. Pembatasan pointer-events dan lapisan di belakang panel menjaga keterbacaan serta interaksi.
+Ketiga figur PNG memakai bahan plush, velvet, kaca dan emas yang serasi dengan panorama pabrik. Figur digerakkan sebagai satu kesatuan dengan ayunan kecil, gerak membungkuk saat pergantian juara, halo di bawahnya, dan kilau bola kaca. Gambar PNG tidak memiliki bagian tubuh yang dianimasikan terpisah.
 
-Latar mewah diatur di `christmas.css`: tirai ruby, bingkai lengkung emas, aurora, ornamen berayun, pohon berkelip, roda gigi, jendela pabrik, jejak cahaya, dan salju. Salju memakai 36 elemen tetap; layar HP menampilkan 18. Tidak ada pembuatan partikel terus-menerus atau loop JavaScript per frame. Reduced motion menghilangkan salju/jejak cahaya dan menghentikan semua animasi. Panel nama, kode member, dan poin tetap solid di atas dekorasi.
+`motion.js` mengunduh dan mendekode setiap figur PNG sekali per halaman, lalu menggunakan object URL yang sama pada semua salinan dan pembaruan peringkat. Kegagalan pemuatan dicoba lagi dengan jeda bertahap hingga satu menit; koneksi pulih juga memicu percobaan ulang. Placeholder dekoratif dipakai selama gambar belum siap, tanpa menyembunyikan nama atau poin. SVG yang digandakan memakai ID gradient/clip unik.
+
+Latar di `christmas.css` berisi aurora, bokeh emas, pita cahaya lengkung, gugusan lampu membentuk pohon, jejak cahaya, sorot panggung, dan salju. Jumlah elemen tetap: 24 bokeh, 84 titik pohon dan 36 salju. Detail dikurangi pada HP. Tidak ada loop JavaScript per frame atau pembuatan partikel terus-menerus. Semua dekorasi berada di belakang panel data yang solid. Tinggi panorama dibatasi agar tidak tertutup panel peringkat. Figur samping disembunyikan pada HP/tablet agar tidak bertumpuk dengan panorama.
+
+M menjeda seluruh motion. Reduced motion menghentikan animasi dan menyembunyikan salju, bokeh, jejak cahaya serta kilau. Tab tersembunyi menjeda animasi dan membatalkan sequence/partikel sementara. R mengulang pembuka tanpa mengubah poin atau timer. Sequence pembuka 2,4 detik, kenaikan poin 1,4 detik, pergantian juara 3,4 detik.
+
+## Aset versi sebelumnya
+
+`joy-factory-parade.png`, `joy-robot.svg`, `joy-train.svg`, `joy-gift.svg`, `joy-bear.svg`, `joy-tree.svg`, `joy-snowglobe.svg`, dan `joy-moon.svg` dipertahankan sebagai berkas lama, tetapi tidak dimuat oleh halaman aktif. Robot vektor, bola salju vektor, dan kereta yang melintas sudah dihapus dari komposisi.
