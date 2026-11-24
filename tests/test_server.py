@@ -292,6 +292,10 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(status,200)
         self.assertIn('image/png',headers['Content-Type'])
         self.assertTrue(content.startswith(b'\x89PNG\r\n\x1a\n'))
+        status, headers, content = self.fetch_raw('/motion.js')
+        self.assertEqual(status,200)
+        self.assertIn('text/javascript',headers['Content-Type'])
+        self.assertIn(b'JoyMotion',content)
         self.assertEqual(self.fetch_raw('/assets/../server.py')[0],404)
 
     def test_original_database_schema_is_migrated_idempotently(self):

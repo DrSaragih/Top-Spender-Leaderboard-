@@ -19,7 +19,7 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get('DATABASE_PATH', ROOT / '.data' / 'leaderboard.sqlite3'))
-DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'assets/joy-robot.svg',
+DISPLAY_FILES = ('index.html', 'leaderboard.js', 'leaderboard.css', 'motion.js', 'assets/joy-robot.svg',
                  'assets/joy-train.svg', 'assets/joy-gift.svg', 'assets/joy-moon.svg',
                  'assets/joy-crown.svg', 'assets/joy-sparkle.svg', 'assets/joy-factory-parade.png')
 DISPLAY_VERSION = hashlib.sha256(b''.join((ROOT / name).read_bytes() for name in DISPLAY_FILES)).hexdigest()[:16]
@@ -261,7 +261,7 @@ class Handler(BaseHTTPRequestHandler):
         # Explicit allowlist prevents exposing SQLite, source, or credentials.
         files = {'/': 'index.html', '/index.html': 'index.html', '/admin': 'admin.html',
                  '/admin.html': 'admin.html', '/admin.js': 'admin.js', '/leaderboard.js': 'leaderboard.js',
-                 '/leaderboard.css': 'leaderboard.css', '/admin.css': 'admin.css'}
+                 '/leaderboard.css': 'leaderboard.css', '/admin.css': 'admin.css', '/motion.js': 'motion.js'}
         if route.startswith('/assets/') and route.removeprefix('/assets/') in {
             'teddy-bear.svg', 'rocking-horse.svg', 'toy-blocks.svg',
             'joy-robot.svg', 'joy-train.svg', 'joy-gift.svg', 'joy-moon.svg',

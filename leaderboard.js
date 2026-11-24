@@ -19,19 +19,19 @@ function renderCustomers(next){
   $('podium').replaceChildren();$('rankings').replaceChildren();
   document.querySelector('.board-grid').classList.toggle('few',customers.length<=3);
   $('podium').classList.toggle('single',customers.length===1);$('podium').classList.toggle('double',customers.length===2);
-  const art=['joy-robot.svg','joy-train.svg','joy-gift.svg'];
   for(const index of (customers.length===2?[0,1]:[1,0,2])){
     const customer=customers[index];if(!customer)continue;
-    const card=element('article','winner'+(index===0?' first':''));card.dataset.member=customer.memberCode;
+    const card=element('article','winner'+(index===0?' first':''));card.dataset.member=customer.memberCode;card.style.setProperty('--entry-order',String(index===0?1:index===1?0:2));
     card.setAttribute('aria-label','Peringkat '+(index+1)+', '+customer.firstName+', '+formatPoints(customer.points));
     if(previous.has(customer.memberCode)&&previous.get(customer.memberCode)!==customer.points)card.classList.add('updated');
     if(index===0){const medal=element('span','rank-medal'),crown=element('img');medal.setAttribute('aria-hidden','true');crown.src='/assets/joy-crown.svg';crown.alt='';crown.width=72;crown.height=65;medal.append(crown);card.append(medal);}
     card.append(element('div','rank',String(index+1).padStart(2,'0')));
-    const avatar=element('div','avatar'),image=element('img');image.src='/assets/'+art[index];image.alt='';image.width=100;image.height=100;avatar.append(image);
+    const avatar=element('div','avatar');JoyMotion.paint(avatar,index);
     card.append(avatar,element('div','name',customer.firstName),element('div','code',customer.memberCode),scoreNode(customer.points));$('podium').append(card);
   }
   customers.slice(3).forEach((customer,index)=>{
-    const row=element('tr');
+    const row=element('tr');row.dataset.member=customer.memberCode;row.style.setProperty('--row-order',index);
+    if(previous.has(customer.memberCode)&&previous.get(customer.memberCode)!==customer.points)row.classList.add('updated');
     for(const text of [String(index+4).padStart(2,'0'),customer.firstName,customer.memberCode])row.append(element('td','',text));
     const cell=element('td');cell.append(scoreNode(customer.points,true));row.append(cell);$('rankings').append(row);
   });
@@ -69,6 +69,7 @@ async function refreshLeaderboard(){
       const error=new Error('Data poin belum sesuai. Perbarui server dan muat ulang halaman.');error.dataError=true;throw error;
     }
     syncCollection(data.collection);const snapshot=JSON.stringify(data.customers);if(snapshot!==lastSnapshot){renderCustomers(data.customers);lastSnapshot=snapshot;}
+    JoyMotion.opening();
     lastSuccess=new Date();showHealth('live','LIVE');$('connection-indicator').title='Sinkron '+lastSuccess.toLocaleTimeString('id-ID');
     $('display-alert').hidden=true;$('last-update').textContent='Sinkron '+lastSuccess.toLocaleTimeString('id-ID');
   }catch(error){
@@ -92,6 +93,7 @@ function setupFestival(){
 }
 function celebratePoints(championChanged=false){
   if(document.body.classList.contains('paused')||matchMedia('(prefers-reduced-motion: reduce)').matches||document.hidden)return;
+  JoyMotion.sequence(championChanged?'champion':'points');
   clearTimeout(celebrationTimer);clearTimeout(particleCleanup);
   document.body.classList.add('celebrating');const layer=$('celebration-layer');layer.replaceChildren();
   const count=championChanged?28:16;
@@ -112,7 +114,7 @@ if(params.get('motion')==='paused')document.body.classList.add('paused');
 $('display-tools').hidden=params.get('controls')!=='1';
 $('motion-toggle').setAttribute('aria-pressed',String(document.body.classList.contains('paused')));
 $('motion-toggle').textContent=document.body.classList.contains('paused')?'Putar animasi':'Jeda animasi';
-$('motion-toggle').addEventListener('click',()=>{const paused=document.body.classList.toggle('paused');$('motion-toggle').setAttribute('aria-pressed',String(paused));$('motion-toggle').textContent=paused?'Putar animasi':'Jeda animasi';});
+$('motion-toggle').addEventListener('click',()=>{const paused=document.body.classList.toggle('paused');$('motion-toggle').setAttribute('aria-pressed',String(paused));$('motion-toggle').textContent=paused?'Putar animasi':'Jeda animasi';if(paused)stopMotionSequences();});
 $('screen-toggle').addEventListener('click',async()=>{
   document.body.classList.add('screen-mode');
   try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}
@@ -120,8 +122,16 @@ $('screen-toggle').addEventListener('click',async()=>{
 });
 document.addEventListener('keydown',event=>{
   if(event.ctrlKey||event.metaKey||event.altKey||event.repeat||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return;
+  if(event.key.toLowerCase()==='r')JoyMotion.replay();
   if(event.key.toLowerCase()==='m')$('motion-toggle').click();
   if(event.key.toLowerCase()==='f')$('screen-toggle').click();
 });
+function stopMotionSequences(){
+  JoyMotion.stop();clearTimeout(celebrationTimer);clearTimeout(particleCleanup);
+  document.body.classList.remove('celebrating');$('celebration-layer').replaceChildren();
+}
+$('sequence-replay').addEventListener('click',()=>JoyMotion.replay());
+JoyMotion.preference.addEventListener('change',event=>{if(event.matches)stopMotionSequences();});
+JoyMotion.preload();
 setInterval(renderCountdown,250);refreshLeaderboard();setInterval(refreshLeaderboard,3000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshLeaderboard();});window.addEventListener('online',refreshLeaderboard);
+document.addEventListener('visibilitychange',()=>{document.body.classList.toggle('motion-hidden',document.hidden);if(document.hidden)stopMotionSequences();else{refreshLeaderboard();JoyMotion.opening();}});window.addEventListener('online',()=>{refreshLeaderboard();JoyMotion.preload();});

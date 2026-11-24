@@ -4,10 +4,12 @@
 <meta name="theme-color" content="#0c182b"><meta name="display-version" content="__DISPLAY_VERSION__">
 <title>Leaderboard · Joy Factory Through The Night</title>
 <link rel="stylesheet" href="/leaderboard.css?v=__DISPLAY_VERSION__">
+<script src="/motion.js?v=__DISPLAY_VERSION__" defer></script>
 <script src="/leaderboard.js?v=__DISPLAY_VERSION__" defer></script>
 </head><body data-health="connecting">
 <main class="joy-stage">
 <div class="night-scene" aria-hidden="true">
+  <div class="motion-beams" aria-hidden="true"><i></i><i></i></div>
   <div class="festival-garland" id="festival-garland"></div>
   <div class="festival-stars" id="festival-stars"></div>
   <div class="celebration-layer" id="celebration-layer"></div>
@@ -35,6 +37,7 @@
   <div class="display-tools" id="display-tools" hidden>
     <button type="button" id="motion-toggle" aria-pressed="false">Jeda animasi</button>
     <button type="button" id="screen-toggle">Layar penuh</button>
+    <button type="button" id="sequence-replay">Putar sequence</button>
   </div>
 </header>
 <p class="display-alert" id="display-alert" role="status" hidden></p>
@@ -46,6 +49,6 @@
     <tbody id="rankings"></tbody>
   </table></div>
 </section>
-<div class="festival-footer" aria-hidden="true"><img src="/assets/joy-factory-parade.png" width="2172" height="724" alt="" decoding="async"></div>
+<div class="festival-footer" aria-hidden="true"><img src="/assets/joy-factory-parade.png" width="2172" height="724" alt="" decoding="async"><div class="courier-track"><div class="factory-courier" data-motion-toy="train"></div></div></div>
 <span id="last-update" class="sr-only"></span>
 </main></body></html>

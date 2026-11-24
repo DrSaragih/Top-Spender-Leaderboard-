@@ -30,6 +30,8 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   }
   await purchase('Nadia','TF-001',750000,'jewelry');await display.locator('.first .amount').filter({hasText:'1 poin'}).waitFor({timeout:6000});
   await display.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth>0));
+  await display.locator('.first .robot-wave').waitFor({state:'attached'});
+  if(await display.locator('.festival-confetti').count()!==0)throw Error('Opening fabricated a score celebration');
   await display.setViewportSize({width:1920,height:1080});await display.screenshot({path:path.join(os.tmpdir(),'joy-single.png'),fullPage:true});
   await purchase('Bima','TF-002',500000,'fnb');await display.locator('.first .name').filter({hasText:'Bima'}).waitFor({timeout:6000});
   await purchase('Clara','TF-003',1000000,'electronics');await purchase('Dewi','TF-004',550000,'fashion');
@@ -69,9 +71,22 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.route('**/api/leaderboard',route=>route.fulfill({json:fixture}));
   await display.bringToFront();await display.emulateMedia({reducedMotion:'no-preference'});
   await display.evaluate(()=>{document.body.classList.remove('paused','celebrating');clearTimeout(celebrationTimer);clearTimeout(particleCleanup);document.getElementById('celebration-layer').replaceChildren();});
+  await display.locator('.avatar .train-wheel').first().waitFor({state:'attached'});
+  await display.locator('.avatar .gift-lid').waitFor({state:'attached'});
+  await display.locator('.factory-courier .train-wheel').first().waitFor({state:'attached'});
+  const wheelBefore=await display.locator('.avatar .train-wheel').first().evaluate(e=>getComputedStyle(e).rotate);
+  await display.waitForTimeout(150);
+  const wheelAfter=await display.locator('.avatar .train-wheel').first().evaluate(e=>getComputedStyle(e).rotate);
+  if(wheelBefore===wheelAfter)throw Error('Wheel is not actually moving');
+  const pointsBeforeReplay=await display.locator('.first .amount').textContent();
+  await display.keyboard.press('r');
+  if(await display.locator('body').getAttribute('data-sequence')!=='intro')throw Error('Replay shortcut failed');
+  if(await display.locator('.first .amount').textContent()!==pointsBeforeReplay)throw Error('Replay changed points');
+  await display.waitForFunction(()=>!document.body.dataset.sequence,{},{timeout:4000});
   const increased={...valid,customers:valid.customers.map((c,i)=>i===0?{...c,points:c.points+1}:c)};
   fixture=increased;await display.evaluate(()=>refreshLeaderboard());
   if(await display.locator('.festival-confetti').count()!==16)throw Error('Point increase did not celebrate');
+  if(await display.locator('body').getAttribute('data-sequence')!=='points')throw Error('Point sequence not running');
   await display.evaluate(()=>document.querySelector('.festival-confetti').dataset.once='yes');
   await display.evaluate(()=>refreshLeaderboard());
   if(await display.locator('.festival-confetti').first().getAttribute('data-once')!=='yes')throw Error('Unchanged poll repeated celebration');
@@ -88,6 +103,14 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   fixture={...valid,customers:[{...valid.customers.at(-1),points:100},...valid.customers.slice(0,-1)]};
   await display.evaluate(()=>refreshLeaderboard());
   if(await display.locator('.festival-confetti').count()!==28)throw Error('Leader change did not celebrate');
+  if(await display.locator('body').getAttribute('data-sequence')!=='champion')throw Error('Champion sequence not running');
+  fixture={...fixture,customers:fixture.customers.map((c,i)=>i===0?{...c,points:101}:c)};await display.evaluate(()=>refreshLeaderboard());
+  if(await display.locator('body').getAttribute('data-sequence')!=='champion')throw Error('Minor update interrupted coronation');
+  if(!(await display.locator('.first .amount').textContent()).includes('101'))throw Error('Sequence delayed live score');
+  await display.keyboard.press('m');
+  if(await display.locator('body').getAttribute('data-sequence'))throw Error('Pause left a sequence active');
+  if(await display.locator('.festival-confetti').count()!==0)throw Error('Pause left confetti active');
+
   await display.evaluate(()=>{document.body.classList.add('paused');document.getElementById('celebration-layer').replaceChildren();});
   fixture=valid;await display.evaluate(()=>refreshLeaderboard());
   fixture={...valid,customers:[{firstName:'Invalid',memberCode:'TF-X',total:500000}]};
@@ -102,7 +125,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Version update lost paused state');
   await admin.click('#logout');await admin.locator('#login-panel').waitFor({state:'visible'});
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('PASS: celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, motion, offline recovery and logout.');
+  console.log('PASS: articulated toys, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, motion, offline recovery and logout.');
  }finally{
   if(browser)await browser.close();
   if(server&&server.exitCode===null)await new Promise(resolve=>{server.once('exit',resolve);server.kill();});
