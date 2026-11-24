@@ -143,7 +143,7 @@ Pintasan **R**/tombol **Putar sequence** hanya mengulang pembuka. Jeda **M**, pe
 
 ### Christmas Bear & Toy Factory
 
-Komposisi memakai enam beruang asli Bear.zip: pose melambai, melompat dan menari pada podium; pose santai di samping judul serta layar kosong; pose candy cane di tengah bawah; dan pose hadiah di kanan bawah. Rumah pabrik baru menempati sisi kiri. Bola atas memakai aset SVG awal dengan warna ruby/navy/ivory serta cahaya dan kilau. Trio ornamen PNG kiriman tetap disimpan sebagai arsip. Dekorasi dibatasi tingginya agar tidak tertutup peringkat. Pada HP/tablet, beruang tengah disembunyikan dan beruang hadiah tetap menemani rumah di kanan.
+Komposisi memakai enam beruang asli Bear.zip: pose melambai, melompat dan menari pada podium; pose santai di samping judul serta layar kosong; pose candy cane di tengah bawah; dan pose hadiah di kanan bawah. Rumah pabrik baru menempati sisi kiri. Bola atas memakai aset SVG awal dengan warna ruby/navy/ivory serta cahaya dan kilau. Trio ornamen PNG kiriman tetap disimpan sebagai arsip. Dekorasi dibatasi tingginya agar tidak tertutup peringkat. Pada tablet, beruang tengah disembunyikan; pada HP, kedua figur bawah disembunyikan agar rumah dapat tampil lebih besar dan utuh.
 
 Latar menggabungkan aurora navy/emas, bokeh bergerak, pita cahaya lengkung, gugusan lampu berbentuk pohon, sorot panggung, salju dan jejak cahaya. Diagram pohon besar digantikan oleh titik cahaya, sedangkan garis pabrik dan roda gigi diperhalus. Kolam elemen tetap berisi 24 bokeh, 84 titik pohon dan 36 salju; detail dikurangi pada HP. Tidak ada loop JavaScript per frame.
 
@@ -151,14 +151,22 @@ Reduced motion menghentikan semua animasi dan menyembunyikan salju, bokeh, jejak
 
 ### Judul dan warna acara
 
-Judul publik menjadi **Top Spender**, memakai Berkshire Swash yang dilayani dari `assets/fonts/BerkshireSwash-Regular.ttf`. Font berlisensi SIL Open Font License; lisensi disertakan di `assets/fonts/OFL.txt`. Halaman tetap dapat memakai font lokal tanpa mengambil font dari pihak ketiga saat acara berjalan. Warna navy utama adalah `#072768`, dengan panel poin solid dan aksen ivory/emas. Opacity arsitektur rumah latar dinaikkan menjadi 24% pada layar besar dan 16% pada HP.
+Judul publik **Top Spender** memakai kaligrafi Great Vibes yang dilayani dari `assets/fonts/GreatVibes-Regular.ttf`, dengan gradasi emas dan garis dekoratif. Font berlisensi SIL Open Font License; lisensi disertakan di `assets/fonts/GreatVibes-OFL.txt`. Berkshire Swash dan lisensinya dipertahankan sebagai cadangan. Halaman tetap dapat memakai font lokal tanpa mengambil font dari pihak ketiga saat acara berjalan. Warna navy utama adalah `#072768`, dengan panel poin solid dan aksen ivory/emas. Opacity arsitektur rumah latar dinaikkan menjadi 24% pada layar besar dan 16% pada HP.
 
 ### Paket aset Bear.zip
 
-Ketujuh PNG kiriman disimpan tanpa perubahan piksel dan diberi nama URL sederhana di `assets/bears`; enam beruang dipakai pada halaman aktif, sementara trio ornamen PNG telah diganti kembali dengan bola SVG awal sesuai permintaan terbaru. Manifest mencatat nama asal serta SHA-256; pengujian server memverifikasi file yang disajikan sesuai manifest. Enam figur beruang hanya diunduh sekali per halaman dan dipakai kembali selama pembaruan poin, termasuk salinan maskot di layar kosong. Paket asli sekitar 14 MiB; nama, kode member dan poin tetap muncul sambil aset dimuat. Beruang tengah disembunyikan pada HP/tablet agar rumah di kiri dan beruang hadiah di kanan tidak bertumpuk. Font Top Spender, warna utama `#072768`, dan opacity rumah latar dipertahankan.
+Ketujuh PNG kiriman disimpan tanpa perubahan piksel dan diberi nama URL sederhana di `assets/bears`; enam beruang dipakai pada halaman aktif, sementara trio ornamen PNG telah diganti kembali dengan bola SVG awal sesuai permintaan terbaru. Manifest mencatat nama asal serta SHA-256; pengujian server memverifikasi file yang disajikan sesuai manifest. Enam figur beruang hanya diunduh sekali per halaman dan dipakai kembali selama pembaruan poin, termasuk salinan maskot di layar kosong. Paket asli sekitar 14 MiB; nama, kode member dan poin tetap muncul sambil aset dimuat. Beruang tengah disembunyikan pada tablet; HP menampilkan rumah yang lebih besar tanpa figur bawah agar tidak bertumpuk. Warna utama `#072768` dan opacity arsitektur latar dipertahankan; judul kini memakai kaligrafi Great Vibes.
 
 ### Rumah kiri dan ornamen bercahaya
 
 Rumah pabrik baru `assets/joy-left-factory.png` dibuat sebagai bangunan utuh dengan jendela amber, atap bersalju, ornamen emas, dan workshop mainan. Rumah selalu berada di kiri bawah dengan skala responsif. Ilustrasi parade tengah sebelumnya tidak lagi dimuat.
 
 Aset `joy-bauble.svg` dipakai kembali untuk tiga bola di atas: ruby, navy, dan ivory. Halo berpendar, pantulan menyapu lacquer, dan kilau kecil berjalan bergantian. Sumber SVG diduplikasi dengan ID gradient/clip unik. Semua animasi mengikuti M, reduced motion, dan status tab. Poin serta timer tetap diperbarui saat animasi dijeda.
+
+### Panggung dan wordmark kaligrafi
+
+Rumah diperbesar sekitar 40–50% pada viewport utama. `presentation.css` menempatkan judul, panel peringkat, dan scenery dalam alur halaman dengan ruang masing-masing, sehingga rumah tetap utuh di kiri. Ukuran kartu, avatar, mahkota, tabel, timer dan ornamen disesuaikan bersama. Mode signage tetap muat pada 1280 × 720, 1920 × 1080 dan 4K; HP dapat menggulir daftar hingga rumah.
+
+Wordmark Great Vibes memakai gradasi emas bergerak, garis dekoratif SVG, dan kilau. Rumah memiliki cahaya jendela berdenyut lembut, uap cerobong, serta titik cahaya yang naik. R memutar ulang pembuka yang juga menggambar garis judul dan menggerakkan rumah masuk. Pergantian juara memberi respons singkat pada cahaya rumah dan judul tanpa menunda angka poin. Tidak ada loop JavaScript per frame atau unduhan aset tambahan setiap polling.
+
+M menjeda semua efek termasuk halo podium; reduced motion menghentikan animasi dan menyembunyikan kilau judul, uap serta titik cahaya rumah. Font dan seluruh aset dilayani oleh server sendiri.

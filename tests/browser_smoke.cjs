@@ -63,8 +63,8 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
     if(await display.locator('.ornament-display').evaluate(e=>{const r=e.getBoundingClientRect();return r.left<0||r.right>innerWidth;}))throw Error('Ornaments clipped horizontally '+width);
     console.log('PASS viewport',width,height);
   }
-  await display.setViewportSize({width:1920,height:1080});await display.screenshot({path:path.join(os.tmpdir(),'joy-leaderboard.png'),fullPage:true});
-  await display.setViewportSize({width:390,height:844});await display.screenshot({path:path.join(os.tmpdir(),'joy-phone.png'),fullPage:true});
+  await display.bringToFront();await display.setViewportSize({width:1920,height:1080});await display.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await display.screenshot({path:path.join(os.tmpdir(),'joy-leaderboard.png'),fullPage:true});
+  await display.setViewportSize({width:390,height:844});await display.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));await display.screenshot({path:path.join(os.tmpdir(),'joy-phone.png'),fullPage:true});
   await admin.setViewportSize({width:1280,height:900});await admin.screenshot({path:path.join(os.tmpdir(),'joy-admin.png'),fullPage:true});
   await display.keyboard.press('m');if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Motion shortcut failed');
   await display.emulateMedia({reducedMotion:'reduce'});if(await display.locator('.festival-bulb').first().evaluate(e=>getComputedStyle(e).animationName)!=='none')throw Error('Reduced motion ignored');
@@ -84,12 +84,16 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   await display.locator('.ornament-art .bauble-sheen').first().waitFor({state:'attached'});
   if(await display.locator('.ornament-art svg').count()!==3)throw Error('Original baubles not restored');
   const shineBefore=await display.locator('.bauble-sheen').evaluateAll(nodes=>nodes.map(e=>getComputedStyle(e).translate).join('|'));
+  const warmthBefore=await display.locator('.house-warmth').evaluate(e=>getComputedStyle(e).opacity);
+  const titleBefore=await display.locator('.title-text').evaluate(e=>getComputedStyle(e).backgroundPosition);
   const snowBefore=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
   const sculptureBefore=await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).transform);
   const bokehBefore=await display.locator('.bokeh-light').first().evaluate(e=>getComputedStyle(e).translate);
   await display.waitForTimeout(150);
   if(sculptureBefore===await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).transform))throw Error('Plush sculpture is not moving');
   if(shineBefore===await display.locator('.bauble-sheen').evaluateAll(nodes=>nodes.map(e=>getComputedStyle(e).translate).join('|')))throw Error('Bauble reflection is not moving');
+  if(warmthBefore===await display.locator('.house-warmth').evaluate(e=>getComputedStyle(e).opacity))throw Error('House windows are not glowing');
+  if(titleBefore===await display.locator('.title-text').evaluate(e=>getComputedStyle(e).backgroundPosition))throw Error('Title goldlight is not moving');
   if(bokehBefore===await display.locator('.bokeh-light').first().evaluate(e=>getComputedStyle(e).translate))throw Error('Bokeh is not moving');
   if(snowBefore===await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Snow is not moving');
   const pointsBeforeReplay=await display.locator('.first .amount').textContent();
@@ -125,12 +129,16 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if(await display.locator('body').getAttribute('data-sequence'))throw Error('Pause left a sequence active');
   if(await display.locator('.festival-confetti').count()!==0)throw Error('Pause left confetti active');
   if(await display.locator('.ornament-aura').first().evaluate(e=>getComputedStyle(e).animationPlayState)!=='paused')throw Error('Pause did not stop ornament glow');
+  if(await display.locator('.house-warmth').evaluate(e=>getComputedStyle(e).animationPlayState)!=='paused')throw Error('Pause did not stop house glow');
+  if(await display.locator('.title-text').evaluate(e=>getComputedStyle(e).animationPlayState)!=='paused')throw Error('Pause did not stop title motion');
+  if(await display.locator('.winner.first').evaluate(e=>getComputedStyle(e,'::before').animationPlayState)!=='paused')throw Error('Pause did not stop winner halo');
   const snowPaused=await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform);
   await display.waitForTimeout(150);
   if(snowPaused!==await display.locator('.snowflake').first().evaluate(e=>getComputedStyle(e).transform))throw Error('Pause did not freeze background snow');
   await display.keyboard.press('r');
   if(await display.locator('body').getAttribute('data-sequence'))throw Error('Replay ignored pause');
   await display.emulateMedia({reducedMotion:'reduce'});
+  if(await display.locator('.house-steam').first().isVisible())throw Error('Reduced motion left chimney steam visible');
   if(await display.locator('#winter-snow').isVisible())throw Error('Reduced motion left snow visible');
   if(await display.locator('.first .premium-figure').evaluate(e=>getComputedStyle(e).animationName)!=='none')throw Error('Reduced motion left bear moving');
   await display.emulateMedia({reducedMotion:'no-preference'});
@@ -150,7 +158,7 @@ const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('cry
   if(!await display.locator('body').evaluate(e=>e.classList.contains('paused')))throw Error('Version update lost paused state');
   await admin.click('#logout');await admin.locator('#login-panel').waitFor({state:'visible'});
   if(errors.length)throw Error(errors.join('\n'));
-  console.log('PASS: new left-aligned factory, restored sparkling baubles, six original bears, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
+  console.log('PASS: larger workshop stage, calligraphy goldlight, window glow/steam, left-aligned factory, restored sparkling baubles, six original bears, no passing train, one-time artwork loads, bounded bokeh/snow/constellations, unique SVG IDs, plush motion, opening replay, champion sequence priority, pause cancellation, celebration triggers, cleanup, pause/reduced motion, live points, Jewel input, admin tabs, timer, CSV, QR, offline recovery and logout.');
  }finally{
   if(browser)await browser.close();
   if(server&&server.exitCode===null)await new Promise(resolve=>{server.once('exit',resolve);server.kill();});
